@@ -352,7 +352,7 @@ release/moc_MainWindow.cpp: MainWindow.h \
 		C:/Qt/6.9.0/mingw_64/include/QtWidgets/qcombobox.h \
 		release/moc_predefs.h \
 		C:/Qt/6.9.0/mingw_64/bin/moc.exe
-	'C:\Qt\6.9.0\mingw_64\bin\moc.exe' $(DEFINES) --include 'C:/Users/36nue/Documents/PROYECTOS FINALES/altokepe/RECEPCIONISTA-VISTA/release/moc_predefs.h' -IC:/Qt/6.9.0/mingw_64/mkspecs/win32-g++ -I'C:/Users/36nue/Documents/PROYECTOS FINALES/altokepe/RECEPCIONISTA-VISTA' -IC:/Qt/6.9.0/mingw_64/include -IC:/Qt/6.9.0/mingw_64/include/QtWidgets -IC:/Qt/6.9.0/mingw_64/include/QtGui -IC:/Qt/6.9.0/mingw_64/include/QtCore -IC:/mingw64/lib/gcc/x86_64-w64-mingw32/13.2.0/include/c++ -IC:/mingw64/lib/gcc/x86_64-w64-mingw32/13.2.0/include/c++/x86_64-w64-mingw32 -IC:/mingw64/lib/gcc/x86_64-w64-mingw32/13.2.0/include/c++/backward -IC:/mingw64/lib/gcc/x86_64-w64-mingw32/13.2.0/include -IC:/mingw64/lib/gcc/x86_64-w64-mingw32/13.2.0/include-fixed -IC:/mingw64/x86_64-w64-mingw32/include MainWindow.h -o release/moc_MainWindow.cpp
+	'C:\Qt\6.9.0\mingw_64\bin\moc.exe' $(DEFINES) --include 'C:/Users/36nue/Documents/PROYECTOS FINALES/ALTOKEPE-PROYECTO/altokepe/RECEPCIONISTA-VISTA/release/moc_predefs.h' -IC:/Qt/6.9.0/mingw_64/mkspecs/win32-g++ -I'C:/Users/36nue/Documents/PROYECTOS FINALES/ALTOKEPE-PROYECTO/altokepe/RECEPCIONISTA-VISTA' -IC:/Qt/6.9.0/mingw_64/include -IC:/Qt/6.9.0/mingw_64/include/QtWidgets -IC:/Qt/6.9.0/mingw_64/include/QtGui -IC:/Qt/6.9.0/mingw_64/include/QtCore -IC:/mingw64/lib/gcc/x86_64-w64-mingw32/13.2.0/include/c++ -IC:/mingw64/lib/gcc/x86_64-w64-mingw32/13.2.0/include/c++/x86_64-w64-mingw32 -IC:/mingw64/lib/gcc/x86_64-w64-mingw32/13.2.0/include/c++/backward -IC:/mingw64/lib/gcc/x86_64-w64-mingw32/13.2.0/include -IC:/mingw64/lib/gcc/x86_64-w64-mingw32/13.2.0/include-fixed -IC:/mingw64/x86_64-w64-mingw32/include MainWindow.h -o release/moc_MainWindow.cpp
 
 compiler_moc_objc_header_make_all:
 compiler_moc_objc_header_clean:
@@ -866,7 +866,9 @@ release/MainWindow.o: MainWindow.cpp MainWindow.h \
 		C:/Qt/6.9.0/mingw_64/include/QtWidgets/QSpinBox \
 		C:/Qt/6.9.0/mingw_64/include/QtWidgets/qspinbox.h \
 		C:/Qt/6.9.0/mingw_64/include/QtCore/QMap \
-		C:/Qt/6.9.0/mingw_64/include/QtCore/QDebug
+		C:/Qt/6.9.0/mingw_64/include/QtCore/QDebug \
+		C:/Qt/6.9.0/mingw_64/include/QtWidgets/QApplication \
+		C:/Qt/6.9.0/mingw_64/include/QtWidgets/qapplication.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o release/MainWindow.o MainWindow.cpp
 
 release/moc_MainWindow.o: release/moc_MainWindow.cpp 

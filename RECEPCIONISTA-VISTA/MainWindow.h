@@ -27,6 +27,7 @@ private:
 
     QComboBox *comboPlatos;
     QTableWidget *tablaPedidos;
+    QLabel *labelTotal; // ← agregado para mostrar el total del pedido
 };
 
 #endif // MAINWINDOW_H
