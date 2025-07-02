@@ -8,5 +8,9 @@ datos avanzadas para optimizar el funcionamiento del restaurante.
 
 ## <samp>Subsistema de gestión de pedidos</samp>
 
+Hola prueba
+
 ## <samp>Subsistema de análisis de datos</samp>
+
+
 
