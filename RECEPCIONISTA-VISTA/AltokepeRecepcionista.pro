@@ -6,6 +6,10 @@ TARGET = AltokepeRecepcionista
 TEMPLATE = app
 
 SOURCES += main.cpp \
-           MainWindow.cpp
+           ../Ranking/Ranking.cpp \
+           MainWindow.cpp \
+           rankingwindow.cpp
 
-HEADERS += MainWindow.h
+HEADERS += MainWindow.h \
+    ../Ranking/Ranking.h \
+    rankingwindow.h
