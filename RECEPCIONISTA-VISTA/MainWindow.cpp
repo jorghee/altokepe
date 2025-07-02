@@ -9,20 +9,53 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent) {
-    // Estilo claro
+    // Estilo claro minimalista con naranja plano
     qApp->setStyle("Fusion");
-    QPalette lightPalette;
-    lightPalette.setColor(QPalette::Window, QColor(245, 245, 245));
-    lightPalette.setColor(QPalette::WindowText, Qt::black);
-    lightPalette.setColor(QPalette::Base, Qt::white);
-    lightPalette.setColor(QPalette::AlternateBase, QColor(240, 240, 240));
-    lightPalette.setColor(QPalette::ToolTipBase, Qt::white);
-    lightPalette.setColor(QPalette::ToolTipText, Qt::black);
-    lightPalette.setColor(QPalette::Text, Qt::black);
-    lightPalette.setColor(QPalette::Button, QColor(220, 220, 220));
-    lightPalette.setColor(QPalette::ButtonText, Qt::black);
-    lightPalette.setColor(QPalette::BrightText, Qt::red);
-    qApp->setPalette(lightPalette);
+    QPalette palette;
+    palette.setColor(QPalette::Window, Qt::white);
+    palette.setColor(QPalette::WindowText, QColor(50, 30, 10));
+    palette.setColor(QPalette::Base, QColor(255, 255, 255));
+    palette.setColor(QPalette::AlternateBase, QColor(245, 245, 245));
+    palette.setColor(QPalette::ToolTipBase, Qt::white);
+    palette.setColor(QPalette::ToolTipText, Qt::black);
+    palette.setColor(QPalette::Text, Qt::black);
+    palette.setColor(QPalette::Button, QColor("#FFA726"));
+    palette.setColor(QPalette::ButtonText, Qt::white);
+    palette.setColor(QPalette::BrightText, Qt::red);
+    qApp->setPalette(palette);
+
+    this->setStyleSheet(R"(
+        QPushButton {
+            background-color: #FFA726;
+            color: white;
+            border: none;
+            padding: 6px;
+            border-radius: 4px;
+        }
+        QPushButton:hover {
+            background-color: #FB8C00;
+        }
+        QLineEdit, QComboBox, QSpinBox {
+            border: 1px solid #ccc;
+            padding: 4px;
+            border-radius: 4px;
+            background: white;
+        }
+        QGroupBox {
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            margin-top: 8px;
+        }
+        QGroupBox::title {
+            subcontrol-origin: margin;
+            left: 10px;
+            padding: 0 4px 0 4px;
+        }
+        QTableWidget {
+            border: 1px solid #ccc;
+            background-color: white;
+        }
+    )");
 
     centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
@@ -74,7 +107,7 @@ MainWindow::MainWindow(QWidget *parent)
     };
 
     tablaPedidos = new QTableWidget(0, 6);
-    tablaPedidos->setHorizontalHeaderLabels({"ID", "Nombre", "Precio", "Cantidad", "Total", "Acción"});
+    tablaPedidos->setHorizontalHeaderLabels({"ID Plato", "Nombre", "Precio", "Cantidad", "Total", "Acción"});
     tablaPedidos->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
     QPushButton *btnAddPlato = new QPushButton("Agregar plato");
@@ -121,9 +154,15 @@ MainWindow::MainWindow(QWidget *parent)
         int row = tablaPedidos->rowCount();
         tablaPedidos->insertRow(row);
 
-        tablaPedidos->setItem(row, 0, new QTableWidgetItem(QString::number(id)));
-        tablaPedidos->setItem(row, 1, new QTableWidgetItem(nombre));
-        tablaPedidos->setItem(row, 2, new QTableWidgetItem(QString::number(precio, 'f', 2)));
+        auto setItem = [&](int col, const QString& text) {
+            QTableWidgetItem *item = new QTableWidgetItem(text);
+            item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+            tablaPedidos->setItem(row, col, item);
+        };
+
+        setItem(0, QString::number(id));
+        setItem(1, nombre);
+        setItem(2, QString::number(precio, 'f', 2));
 
         QSpinBox *cantidadSpin = new QSpinBox();
         cantidadSpin->setRange(1, 20);
@@ -131,7 +170,7 @@ MainWindow::MainWindow(QWidget *parent)
         tablaPedidos->setCellWidget(row, 3, cantidadSpin);
 
         QTableWidgetItem *totalItem = new QTableWidgetItem(QString::number(precio, 'f', 2));
-        totalItem->setFlags(totalItem->flags() & ~Qt::ItemIsEditable);
+        totalItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
         tablaPedidos->setItem(row, 4, totalItem);
 
         QPushButton *btnDel = new QPushButton("Eliminar");
@@ -163,4 +202,3 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
 }
-
