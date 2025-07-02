@@ -2,8 +2,13 @@
 #define RANKINGWINDOW_H
 
 #include <QWidget>
-#include <QTableWidget>
-#include "../Ranking/Ranking.h" // o "../Ranking/Ranking.h" según tu ruta
+#include <QVBoxLayout>
+
+struct RegistroPedido {
+    int idPlato;
+    std::string nombrePlato;
+    int cantidadVendida;
+};
 
 class RankingWindow : public QWidget {
     Q_OBJECT
@@ -12,8 +17,8 @@ public:
     explicit RankingWindow(QWidget *parent = nullptr);
 
 private:
-    QTableWidget* tablaRanking;
-    void simularRanking();  // reemplaza actualizarRanking
+    QVBoxLayout* contenedorRanking;
+    void simularRanking();
 };
 
 #endif // RANKINGWINDOW_H
