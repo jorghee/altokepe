@@ -30,30 +30,32 @@ public:
   LogicaNegocio(const LogicaNegocio&) = delete;
   void operator=(const LogicaNegocio&) = delete;
   
-  void procesarMensaje(const QJsonObject& mensaje);
+  void procesarMensaje(const QJsonObject& mensaje, ManejadorCliente* remitente);
   void simularRecepcionDePedidos();
   void cargarMenuDesdeArchivo(const QString& rutaArchivo);
+  void registrarManejador(ManejadorCliente* manejador);
+  void eliminarManejador(ManejadorCliente* manejador);
 
 signals:
-  void broadcast(const QJsonObject& mensaje);
+  void enviarRespuesta(ManejadorCliente* cliente, const QJsonObject& mensaje);
 
 private:
-  void procesarNuevoPedido(const QJsonObject& data);
-  void procesarPrepararPedido(const QJsonObject& data);
-  void procesarCancelarPedido(const QJsonObject& data);
-  void procesarConfirmarEntrega(const QJsonObject& data);
-  void procesarDevolverPlato(const QJsonObject& data); 
+  void procesarNuevoPedido(const QJsonObject& data, ManejadorCliente* remitente);
+  void procesarPrepararPedido(const QJsonObject& data, ManejadorCliente* remitente);
+  void procesarCancelarPedido(const QJsonObject& data, ManejadorCliente* remitente);
+  void procesarConfirmarEntrega(const QJsonObject& data, ManejadorCliente* remitente);
+  void procesarDevolverPlato(const QJsonObject& data, ManejadorCliente* remitente); 
 
   void clasificarPedidos(
     std::vector<PedidoMesa>& pendientes,
     std::vector<PedidoMesa>& enProgreso,
     std::vector<PedidoMesa>& terminados
   );
-
-  QJsonObject getEstadoCompleto();
-  QJsonObject getMenuCompleto();
+  QJsonObject getEstadoCompleto(bool incluirMenu = false);
+  void notificarActualizacionGeneral();
 
   std::mutex m_mutex;
+  std::vector<ManejadorCliente*> m_manejadoresActivos;
   
   std::unordered_map<int, PlatoDefinicion> m_menu;
   std::unordered_map<long long, PedidoMesa> m_pedidosActivos;

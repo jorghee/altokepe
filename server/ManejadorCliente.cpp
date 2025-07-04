@@ -22,6 +22,8 @@ void ManejadorCliente::procesar() {
 
   connect(m_socket, &QTcpSocket::readyRead, this, &ManejadorCliente::listoParaLeer);
   connect(m_socket, &QTcpSocket::disconnected, this, &ManejadorCliente::desconectado);
+
+  LogicaNegocio::instance()->registrarManejador(this);
   qDebug() << "Cliente conectado en socket" << m_socketDescriptor;
 }
 
@@ -42,7 +44,7 @@ void ManejadorCliente::procesarBuffer() {
       qWarning() << "Mensaje JSON inválido recibido en socket" << m_socketDescriptor;
       continue;
     }
-    LogicaNegocio::instance()->procesarMensaje(doc.object());
+    LogicaNegocio::instance()->procesarMensaje(doc.object(), this);
   }
 }
 

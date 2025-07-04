@@ -20,7 +20,16 @@ void Servidor::incomingConnection(qintptr socketDescriptor) {
   connect(thread, &QThread::finished, thread, &QThread::deleteLater);
 
   // Conexión para enviar respuestas directas
-  connect(LogicaNegocio::instance(), &LogicaNegocio::broadcast, manejador, &ManejadorCliente::enviarMensaje, Qt::QueuedConnection);
+  // connect(LogicaNegocio::instance(), &LogicaNegocio::enviarRespuesta, manejador,
+  // &ManejadorCliente::enviarMensaje, Qt::QueuedConnection);
+  connect(LogicaNegocio::instance(), &LogicaNegocio::enviarRespuesta, manejador,
+    [manejador](ManejadorCliente* clienteDestino, const QJsonObject& mensaje) {
+      // La lambda se ejecuta para CADA manejador.
+      // Solo si este manejador es el destinatario, se envía el mensaje.
+      if (manejador == clienteDestino) {
+        manejador->enviarMensaje(mensaje);
+      }
+    }, Qt::QueuedConnection);
 
   thread->start();
 }
