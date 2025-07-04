@@ -5,31 +5,41 @@ project(ManagerChefClient VERSION 1.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Habilitar manejo automático de MOC, UIC, y RCC de Qt
-# Esto es esencial para que los signals/slots y otros meta-objetos funcionen
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-# Buscar los paquetes de Qt6 que necesitamos
-# Widgets: para toda la UI
-# Network: para la futura conexión con el servidor
 find_package(Qt6 REQUIRED COMPONENTS Widgets Network)
 
-# Crear un archivo de recursos para empaquetar el stylesheet
-# Esto hace que el archivo .qss se compile dentro del ejecutable
+# Añadir el directorio raíz ('altokepe/') a las rutas de inclusión para el compilador.
+# Esto permite que #include "common/network/SerializadorJSON.h" funcione.
+include_directories(../../../)
+
 set(RESOURCE_FILES
   resources.qrc
 )
 
-# Definir el ejecutable y sus archivos fuente
+# Definir el ejecutable y sus archivos fuente.
+# Las rutas deben ser relativas a ESTE archivo CMakeLists.txt
 add_executable(ManagerChefClient
+  # Archivo principal
   main.cpp
+  
+  # Recursos de la aplicación
   ${RESOURCE_FILES}
+  
+  # Capa de Red (están en subdirectorios de la ubicación actual)
+  network/ClienteManagerApp.cpp
+  network/ClienteTCP.cpp
+
+  # Capa de UI (están en subdirectorios de la ubicación actual)
   ui/VentanaManager.cpp
   ui/ColumnaPedidos.cpp
   ui/TarjetaPedido.cpp
   ui/TarjetaPlato.cpp
+
+  # Fuentes del directorio 'common' (necesitan la ruta relativa completa)
+  ../../../common/network/SerializadorJSON.cpp
 )
 
 # Vincular las librerías de Qt al ejecutable
