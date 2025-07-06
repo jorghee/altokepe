@@ -1,3 +1,4 @@
+#include "common/network/Protocolo.h"
 #include "ManejadorCliente.h"
 #include "LogicaNegocio.h"
 #include <QJsonDocument>
@@ -11,6 +12,10 @@ ManejadorCliente::ManejadorCliente(qintptr socketDescriptor, QObject* parent)
 ManejadorCliente::~ManejadorCliente() {
   qDebug() << "Manejador de cliente destruido para socket" << m_socketDescriptor;
 }
+
+QString ManejadorCliente::getRol() const { return m_rol; }
+
+int ManejadorCliente::getIdActor() const { return m_idActor; }
 
 void ManejadorCliente::procesar() {
   m_socket = new QTcpSocket();
@@ -44,8 +49,27 @@ void ManejadorCliente::procesarBuffer() {
       qWarning() << "Mensaje JSON inválido recibido en socket" << m_socketDescriptor;
       continue;
     }
-    LogicaNegocio::instance()->procesarMensaje(doc.object(), this);
+
+    QJsonObject mensaje = doc.object();
+    if (m_rol.isEmpty()) {
+      if (mensaje[Protocolo::COMANDO].toString() == Protocolo::IDENTIFICARSE) {
+        identificarCliente(mensaje);
+      } else {
+        qWarning() << "Cliente no identificado intentó enviar un comando. Se ignora.";
+      }
+    } else {
+      LogicaNegocio::instance()->procesarMensaje(mensaje, this);
+    }
   }
+}
+
+void ManejadorCliente::identificarCliente(const QJsonObject& data) {
+  m_rol = data["rol"].toString();
+  m_idActor = data["id"].toInt(-1);
+  qDebug() << "Cliente" << m_socketDescriptor << "identificado como:" << m_rol << "con ID:" << m_idActor;
+  
+  // Le pedimos a la lógica de negocio que le envíe el estado inicial
+  LogicaNegocio::instance()->enviarEstadoInicial(this);
 }
 
 void ManejadorCliente::desconectado() {
