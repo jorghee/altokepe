@@ -93,7 +93,8 @@ EstadoPlato SerializadorJSON::stringToEstadoPlato(const QString& str) {
 
 QString SerializadorJSON::estadoPedidoToString(EstadoPedido estado) {
   switch(estado) {
-    case EstadoPedido::ACTIVO: return "ACTIVO";
+    case EstadoPedido::PENDIENTE: return "PENDIENTE";
+    case EstadoPedido::EN_PROGRESO: return "EN_PROGRESO";
     case EstadoPedido::COMPLETADO: return "COMPLETADO";
     case EstadoPedido::CANCELADO: return "CANCELADO";
     default: return "DESCONOCIDO";
@@ -101,8 +102,9 @@ QString SerializadorJSON::estadoPedidoToString(EstadoPedido estado) {
 }
 
 EstadoPedido SerializadorJSON::stringToEstadoPedido(const QString& str) {
-  if (str == "ACTIVO") return EstadoPedido::ACTIVO;
+  if (str == "PENDIENTE") return EstadoPedido::PENDIENTE;
+  if (str == "EN_PROGRESO") return EstadoPedido::EN_PROGRESO;
   if (str == "COMPLETADO") return EstadoPedido::COMPLETADO;
   if (str == "CANCELADO") return EstadoPedido::CANCELADO;
-  return EstadoPedido::ACTIVO; // Default
+  return EstadoPedido::PENDIENTE; // Default
 }
