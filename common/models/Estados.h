@@ -12,17 +12,10 @@ enum class EstadoPlato {
 
 // Estado general de un pedido completo.
 enum class EstadoPedido {
-  ACTIVO,
+  PENDIENTE,
+  EN_PROGRESO,
   COMPLETADO,
   CANCELADO
-};
-
-enum class TipoCliente {
-  DESCONOCIDO,
-  RECEPCIONISTA,
-  MANAGER_CHEF,
-  ESTACION,
-  RANKING
 };
 
 #endif
