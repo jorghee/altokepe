@@ -408,7 +408,6 @@ QJsonObject LogicaNegocio::getEstadoParaEstacion(const std::string& nombreEstaci
   QJsonObject data;
   QJsonArray platosPendientes;
 
-  // Verificamos si la estación existe en nuestro mapa de colas
   if (m_colasPorEstacion.count(nombreEstacion)) {
     // Creamos una copia de la cola de prioridad para no modificar la original
     ColaPrioridadPlatos tempQueue = m_colasPorEstacion.at(nombreEstacion);
@@ -497,6 +496,7 @@ void LogicaNegocio::notificarRecepcionista_unlocked(int idRecepcionista, long lo
   }
 }
 
+// Este método se eliminará, los datos se reciben del recepcionista
 void LogicaNegocio::simularRecepcionDePedidos() {
   qDebug() << "--- INICIANDO SIMULACIÓN DE RECEPCIÓN DE PEDIDOS ---";
 
