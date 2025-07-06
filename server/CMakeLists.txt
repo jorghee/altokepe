@@ -23,6 +23,7 @@ add_executable(ServidorAltokepe
   Servidor.cpp
   ManejadorCliente.cpp
   LogicaNegocio.cpp
+  resources.qrc
   
   # Incluimos el archivo .cpp del directorio common que necesita compilación.
   ../common/network/SerializadorJSON.cpp
