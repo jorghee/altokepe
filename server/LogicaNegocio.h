@@ -11,6 +11,7 @@
 #include "common/models/PedidoMesa.h"
 #include "common/models/PlatoDefinicion.h"
 #include "common/models/InfoPlatoPrioridad.h"
+#include "common/models/Estados.h"
 
 class ManejadorCliente;
 
@@ -26,15 +27,17 @@ private:
 
 public:
   static LogicaNegocio* instance();
-
   LogicaNegocio(const LogicaNegocio&) = delete;
   void operator=(const LogicaNegocio&) = delete;
   
-  void procesarMensaje(const QJsonObject& mensaje, ManejadorCliente* remitente);
-  void simularRecepcionDePedidos();
   void cargarMenuDesdeArchivo(const QString& rutaArchivo);
+  void simularRecepcionDePedidos();
+
   void registrarManejador(ManejadorCliente* manejador);
   void eliminarManejador(ManejadorCliente* manejador);
+
+  void procesarMensaje(const QJsonObject& mensaje, ManejadorCliente* remitente);
+  void enviarEstadoInicial(ManejadorCliente* cliente);
 
 signals:
   void enviarRespuesta(ManejadorCliente* cliente, const QJsonObject& mensaje);
@@ -43,16 +46,22 @@ private:
   void procesarNuevoPedido(const QJsonObject& data, ManejadorCliente* remitente);
   void procesarPrepararPedido(const QJsonObject& data, ManejadorCliente* remitente);
   void procesarCancelarPedido(const QJsonObject& data, ManejadorCliente* remitente);
+  void procesarMarcarPlatoTerminado(const QJsonObject& data, ManejadorCliente* remitente);
   void procesarConfirmarEntrega(const QJsonObject& data, ManejadorCliente* remitente);
   void procesarDevolverPlato(const QJsonObject& data, ManejadorCliente* remitente); 
+
+  // Lógica de estado y notificación dirigida
+  void notificarManagersYRanking();
+  void notificarEstacion(const std::string& nombreEstacion);
+  void notificarRecepcionista(int idRecepcionista, long long idPedido);
 
   void clasificarPedidos(
     std::vector<PedidoMesa>& pendientes,
     std::vector<PedidoMesa>& enProgreso,
     std::vector<PedidoMesa>& terminados
   );
-  QJsonObject getEstadoCompleto(bool incluirMenu = false);
-  void notificarActualizacionGeneral();
+  QJsonObject getEstadoParaManagerYRanking();
+  QJsonObject getEstadoParaEstacion(const std::string& nombreEstacion);
 
   std::mutex m_mutex;
   std::vector<ManejadorCliente*> m_manejadoresActivos;
