@@ -15,6 +15,7 @@ public:
   void iniciar();
 
 private slots:
+  void onConectado();
   void onMensajeRecibido(const QJsonObject& mensaje);
   void onPrepararPedido(long long idPedido);
   void onCancelarPedido(long long idPedido);

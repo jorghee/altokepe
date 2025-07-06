@@ -2,20 +2,23 @@
 #define TARJETAPEDIDO_H
 
 #include <QWidget>
-#include <vector>
+#include <unordered_map>
 
 class QVBoxLayout;
+class QHBoxLayout;
 class TarjetaPlato;
 
 class TarjetaPedido : public QWidget {
   Q_OBJECT
 public:
-  // Usaremos un identificador para saber a qué pedido nos referimos
   explicit TarjetaPedido(long long idPedido, const QString& titulo, QWidget* parent = nullptr);
   
-  void agregarPlato(const QString& nombrePlato, const QString& estado);
-  void agregarAcciones(bool esPrimerPedido); // Para agregar botones solo al primero de la cola "Pendiente"
+  void agregarPlato(long long idInstancia, const QString& nombrePlato, const QString& estado);
+  void actualizarEstadoPlato(long long idInstancia, const QString& nuevoEstado);
+
+  void agregarAcciones(bool esPrimerPedido);
   void agregarAccionesTerminado();
+  void quitarAcciones();
   
 signals:
   void prepararPedido(long long idPedido);
@@ -26,7 +29,8 @@ signals:
 private:
   long long m_idPedido;
   QVBoxLayout* m_layoutPlatos;
-  std::vector<TarjetaPlato*> m_platos;
+  QHBoxLayout* m_layoutBotones = nullptr;
+  std::unordered_map<long long, TarjetaPlato*> m_mapaPlatos;
 };
 
 #endif
