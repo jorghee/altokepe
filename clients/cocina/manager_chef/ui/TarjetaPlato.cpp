@@ -1,6 +1,7 @@
 #include "TarjetaPlato.h"
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QString>
 
 TarjetaPlato::TarjetaPlato(const QString& nombrePlato, const QString& estadoInicial, QWidget* parent)
   : QWidget(parent) {
@@ -24,5 +25,16 @@ TarjetaPlato::TarjetaPlato(const QString& nombrePlato, const QString& estadoInic
 
 void TarjetaPlato::actualizarEstado(const QString& nuevoEstado) {
   m_estadoLabel->setText(nuevoEstado);
-  // TODO: Cambiar el color del label de estado según el nuevo estado
+
+  static const QMap<QString, QString> estadoColores = {
+    {"En Espera", "#aaaaaa"},
+    {"En Progreso", "#f0c040"},
+    {"Finalizado", "#5cb85c"},
+    {"Entregado", "#337ab7"},
+    {"Cancelado", "#d9534f"}
+  };
+
+  QString color = estadoColores.value(nuevoEstado, "#aaaaaa");
+  m_estadoLabel->setStyleSheet(
+      QString("background-color: %1; color: white; border-radius: 8px; padding: 4px; font-weight: bold;").arg(color));
 }
