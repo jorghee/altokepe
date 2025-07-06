@@ -18,4 +18,12 @@ enum class EstadoPedido {
   CANCELADO
 };
 
+enum class TipoActor {
+  DESCONOCIDO,
+  RECEPCIONISTA,
+  MANAGER_CHEF,
+  ESTACION_COCINA,
+  RANKING
+};
+
 #endif
