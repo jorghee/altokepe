@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include <QTcpSocket>
+#include <QString>
+#include "common/models/Estados.h"
 
 class ManejadorCliente : public QObject {
   Q_OBJECT
@@ -10,8 +12,9 @@ public:
   explicit ManejadorCliente(qintptr socketDescriptor, QObject* parent = nullptr);
   virtual ~ManejadorCliente();
 
-  QString getRol() const;
+  TipoActor getTipoActor() const;
   int getIdActor() const;
+  QString getNombreEstacion() const;
 
 public slots:
   void procesar();
@@ -32,8 +35,9 @@ private:
   QTcpSocket* m_socket = nullptr;
   QByteArray m_buffer;
 
-  QString m_rol;
-  int m_idActor = -1; // -1 indica no identificado
+  TipoActor m_tipoActor = TipoActor::DESCONOCIDO;
+  int m_idActor = -1;
+  QString m_nombreEstacion;
 };
 
 #endif

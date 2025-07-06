@@ -1,4 +1,5 @@
 #include "common/network/Protocolo.h"
+#include "common/models/Estados.h"
 #include "ManejadorCliente.h"
 #include "LogicaNegocio.h"
 #include <QJsonDocument>
@@ -13,9 +14,9 @@ ManejadorCliente::~ManejadorCliente() {
   qDebug() << "Manejador de cliente destruido para socket" << m_socketDescriptor;
 }
 
-QString ManejadorCliente::getRol() const { return m_rol; }
-
+TipoActor ManejadorCliente::getTipoActor() const { return m_tipoActor; }
 int ManejadorCliente::getIdActor() const { return m_idActor; }
+QString ManejadorCliente::getNombreEstacion() const { return m_nombreEstacion; }
 
 void ManejadorCliente::procesar() {
   m_socket = new QTcpSocket();
@@ -51,7 +52,7 @@ void ManejadorCliente::procesarBuffer() {
     }
 
     QJsonObject mensaje = doc.object();
-    if (m_rol.isEmpty()) {
+    if (m_tipoActor == TipoActor::DESCONOCIDO) {
       if (mensaje[Protocolo::COMANDO].toString() == Protocolo::IDENTIFICARSE) {
         identificarCliente(mensaje);
       } else {
@@ -64,16 +65,63 @@ void ManejadorCliente::procesarBuffer() {
 }
 
 void ManejadorCliente::identificarCliente(const QJsonObject& data) {
-  m_rol = data["rol"].toString();
-  m_idActor = data["id"].toInt(-1);
-  qDebug() << "Cliente" << m_socketDescriptor << "identificado como:" << m_rol << "con ID:" << m_idActor;
+  QString rolString = data["rol"].toString();
+
+  if (rolString == "Recepcionista") {
+    m_tipoActor = TipoActor::RECEPCIONISTA;
+  } else if (rolString == "ManagerChef") {
+    m_tipoActor = TipoActor::MANAGER_CHEF;
+  } else if (rolString == "EstacionCocina") {
+    m_tipoActor = TipoActor::ESTACION_COCINA;
+  } else if (rolString == "Ranking") {
+    m_tipoActor = TipoActor::RANKING;
+  } else {
+    m_tipoActor = TipoActor::DESCONOCIDO;
+    qWarning() << "Rol desconocido recibido:" << rolString << ". Desconectando.";
+    m_socket->disconnectFromHost();
+    return;
+  }
+
+  switch (m_tipoActor) {
+    case TipoActor::RECEPCIONISTA:
+      m_idActor = data["id"].toInt(-1);
+      if (m_idActor == -1) {
+        qWarning() << "Recepcionista no proporcionó un 'id' válido. Desconectando.";
+        m_socket->disconnectFromHost();
+        return;
+      }
+      qDebug() << "Cliente" << m_socketDescriptor << "identificado como RECEPCIONISTA con ID:" << m_idActor;
+      break;
+
+    case TipoActor::ESTACION_COCINA:
+      m_nombreEstacion = data["nombre_estacion"].toString();
+      if (m_nombreEstacion.isEmpty()) {
+        qWarning() << "EstacionCocina no proporcionó 'nombre_estacion'. Desconectando.";
+        m_socket->disconnectFromHost();
+        return;
+      }
+      qDebug() << "Cliente" << m_socketDescriptor << "identificado como ESTACION_COCINA con Nombre:" << m_nombreEstacion;
+      break;
+
+    case TipoActor::MANAGER_CHEF:
+      qDebug() << "Cliente" << m_socketDescriptor << "identificado como MANAGER_CHEF.";
+      break;
+    
+    case TipoActor::RANKING:
+      qDebug() << "Cliente" << m_socketDescriptor << "identificado como RANKING.";
+      break;
+
+    default:
+      break;
+  }
   
   // Le pedimos a la lógica de negocio que le envíe el estado inicial
-  LogicaNegocio::instance()->enviarEstadoInicial(this);
+  if (m_tipoActor != TipoActor::DESCONOCIDO) LogicaNegocio::instance()->enviarEstadoInicial(this);
 }
 
 void ManejadorCliente::desconectado() {
   qDebug() << "Cliente desconectado del socket" << m_socketDescriptor;
+  LogicaNegocio::instance()->eliminarManejador(this);
   m_socket->deleteLater();
   emit finished();
 }
