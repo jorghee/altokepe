@@ -17,4 +17,12 @@ enum class EstadoPedido {
   CANCELADO
 };
 
+enum class TipoCliente {
+  DESCONOCIDO,
+  RECEPCIONISTA,
+  MANAGER_CHEF,
+  ESTACION,
+  RANKING
+};
+
 #endif
