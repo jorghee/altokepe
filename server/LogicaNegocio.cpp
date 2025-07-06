@@ -1,6 +1,7 @@
 #include "LogicaNegocio.h"
 #include "ManejadorCliente.h"
 #include "common/network/Protocolo.h"
+#include "common/models/Estados.h"
 #include "common/network/SerializadorJSON.h"
 #include <QFile>
 #include <QJsonDocument>
@@ -8,6 +9,7 @@
 #include <QJsonArray>
 #include <QDebug>
 #include <chrono>
+#include <algorithm>
 
 LogicaNegocio* LogicaNegocio::s_instance = nullptr;
 
@@ -60,13 +62,12 @@ void LogicaNegocio::eliminarManejador(ManejadorCliente* manejador) {
 void LogicaNegocio::enviarEstadoInicial(ManejadorCliente* cliente) {
   std::lock_guard<std::mutex> lock(m_mutex);
   QJsonObject estado;
-  QString rol = cliente->getRol();
+  TipoActor tipo = cliente->getTipoActor();
 
-  if (rol == "ManagerChef" || rol == "Ranking") {
-    estado = getEstadoParaManagerYRanking();
-  } else if (rol == "EstacionCocina") {
-    // Necesitaríamos el nombre de la estación aquí
-    // estado = getEstadoParaEstacion(cliente->getNombreEstacion());
+  if (tipo == TipoActor::MANAGER_CHEF || tipo == TipoActor::RANKING) {
+    estado = getEstadoParaManagerYRanking(true);
+  } else if (tipo == TipoActor::ESTACION_COCINA) {
+    estado = getEstadoParaEstacion(cliente->getNombreEstacion().toStdString());
   }
 
   if (!estado.isEmpty()) {
@@ -76,32 +77,28 @@ void LogicaNegocio::enviarEstadoInicial(ManejadorCliente* cliente) {
 
 void LogicaNegocio::procesarMensaje(const QJsonObject& mensaje, ManejadorCliente* remitente) {
   QString comando = mensaje[Protocolo::COMANDO].toString();
-  std::lock_guard<std::mutex> lock(m_mutex);
 
   if (comando == Protocolo::NUEVO_PEDIDO) {
     procesarNuevoPedido(mensaje, remitente);
-    notificarManagersYRanking();
   } else if (comando == Protocolo::PREPARAR_PEDIDO) {
     procesarPrepararPedido(mensaje, remitente);
-    notificarManagersYRanking();
   } else if (comando == Protocolo::CANCELAR_PEDIDO) {
     procesarCancelarPedido(mensaje, remitente);
-    notificarManagersYRanking();
   } else if (comando == Protocolo::MARCAR_PLATO_TERMINADO) {
     procesarMarcarPlatoTerminado(mensaje, remitente);
-    notificarManagersYRanking();
   } else if (comando == Protocolo::CONFIRMAR_ENTREGA) {
     procesarConfirmarEntrega(mensaje, remitente);
-    notificarManagersYRanking();
   } else if (comando == Protocolo::DEVOLVER_PLATO) {
     procesarDevolverPlato(mensaje, remitente);
-    notificarManagersYRanking();
   } else {
     qWarning() << "Comando desconocido recibido:" << comando;
+    return;
   }
 }
 
 void LogicaNegocio::procesarNuevoPedido(const QJsonObject& data, ManejadorCliente* remitente) {
+  std::lock_guard<std::mutex> lock(m_mutex);
+
   PedidoMesa nuevoPedido;
   nuevoPedido.id_pedido = m_siguienteIdPedido++;
   nuevoPedido.numero_mesa = data["mesa"].toInt();
@@ -128,9 +125,15 @@ void LogicaNegocio::procesarNuevoPedido(const QJsonObject& data, ManejadorClient
   m_pedidosActivos[nuevoPedido.id_pedido] = nuevoPedido;
   m_colaManagerChef.push(nuevoPedido.id_pedido);
   qDebug() << "Nuevo pedido" << nuevoPedido.id_pedido << "para mesa" << nuevoPedido.numero_mesa << "creado.";
+
+  QJsonObject notificacion;
+  notificacion[Protocolo::EVENTO] = "PEDIDO_NUEVO";
+  notificacion[Protocolo::DATA] = SerializadorJSON::pedidoMesaToJson(nuevoPedido);
+  notificarManagersYRanking_unlocked(notificacion);
 }
 
 void LogicaNegocio::procesarPrepararPedido(const QJsonObject& data, ManejadorCliente* remitente) {
+  std::lock_guard<std::mutex> lock(m_mutex);
   long long idPedido = data["id_pedido"].toVariant().toLongLong();
 
   if (m_colaManagerChef.empty() || m_colaManagerChef.front() != idPedido) return;
@@ -140,10 +143,15 @@ void LogicaNegocio::procesarPrepararPedido(const QJsonObject& data, ManejadorCli
   PedidoMesa& pedido = m_pedidosActivos.at(idPedido);
   pedido.estado_general = EstadoPedido::EN_PROGRESO;
 
-  std::unordered_set<std::string> estacionesAfectadas;
+  QJsonObject notificacionManager;
+  notificacionManager[Protocolo::EVENTO] = "PEDIDO_A_PROGRESO";
+  QJsonObject dataManager;
+  dataManager["id_pedido"] = QJsonValue::fromVariant(QVariant::fromValue(idPedido));
+  notificacionManager[Protocolo::DATA] = dataManager;
+  notificarManagersYRanking_unlocked(notificacionManager);
 
   for (auto& platoInstancia : pedido.platos) {
-    platoInstancia.estado = EstadoPlato::EN_PROGRESO; // Simulación: todos a "en progreso"
+    platoInstancia.estado = EstadoPlato::EN_PROGRESO;
     const auto& platoDef = m_menu.at(platoInstancia.id_plato_definicion);
 
     double W1 = 1.0, W2 = 0.5;
@@ -154,16 +162,21 @@ void LogicaNegocio::procesarPrepararPedido(const QJsonObject& data, ManejadorCli
     InfoPlatoPrioridad info {pedido.id_pedido, platoInstancia.id_instancia, score};
     m_colasPorEstacion[platoDef.estacion].push(info);
 
-    estacionesAfectadas.insert(platoDef.estacion);
+    QJsonObject notificacionEstacion;
+    notificacionEstacion[Protocolo::EVENTO] = "NUEVO_PLATO_EN_COLA";
+    QJsonObject dataPlato;
+    dataPlato["nombre"] = QString::fromStdString(platoDef.nombre);
+    dataPlato["id_pedido"] = QJsonValue::fromVariant(QVariant::fromValue(info.id_pedido));
+    dataPlato["id_instancia"] = QJsonValue::fromVariant(QVariant::fromValue(info.id_instancia_plato));
+    dataPlato["score"] = info.score_prioridad;
+    notificacionEstacion[Protocolo::DATA] = dataPlato;
+    notificarEstacion_unlocked(platoDef.estacion, notificacionEstacion);
   }
   qDebug() << "Pedido" << idPedido << "distribuido a las estaciones.";
-
-  for (const auto& nombreEstacion : estacionesAfectadas) {
-    notificarEstacion(nombreEstacion);
-  }
 }
 
 void LogicaNegocio::procesarCancelarPedido(const QJsonObject& data, ManejadorCliente* remitente) {
+  std::lock_guard<std::mutex> lock(m_mutex);
   long long idPedido = data["id_pedido"].toVariant().toLongLong();
 
   if (m_colaManagerChef.empty() || m_colaManagerChef.front() != idPedido) return;
@@ -174,35 +187,83 @@ void LogicaNegocio::procesarCancelarPedido(const QJsonObject& data, ManejadorCli
   pedido.estado_general = EstadoPedido::CANCELADO;
   for(auto& plato : pedido.platos) plato.estado = EstadoPlato::CANCELADO;
   qDebug() << "Pedido" << idPedido << "cancelado.";
+
+  QJsonObject notificacion;
+  notificacion[Protocolo::EVENTO] = "PEDIDO_CANCELADO";
+  QJsonObject dataNotif;
+  dataNotif["id_pedido"] = QJsonValue::fromVariant(QVariant::fromValue(idPedido));
+  notificacion[Protocolo::DATA] = dataNotif;
+  notificarManagersYRanking_unlocked(notificacion);
+
+  m_pedidosActivos.erase(idPedido);
 }
 
 void LogicaNegocio::procesarMarcarPlatoTerminado(const QJsonObject& data, ManejadorCliente* remitente) {
+  std::lock_guard<std::mutex> lock(m_mutex);
+
   long long idPedido = data["id_pedido"].toVariant().toLongLong();
   long long idInstancia = data["id_instancia"].toVariant().toLongLong();
-  std::string nombreEstacion = remitente->getRol().toStdString(); 
 
-  if (m_pedidosActivos.count(idPedido)) {
-    auto& pedido = m_pedidosActivos.at(idPedido);
-    bool todosTerminados = true;
-    for (auto& plato : pedido.platos) {
-      if (plato.id_instancia == idInstancia) {
-        plato.estado = EstadoPlato::FINALIZADO;
-        plato.timestamp_ultimo_cambio = std::chrono::system_clock::now();
+  if (!remitente || remitente->getTipoActor() != TipoActor::ESTACION_COCINA) {
+    qWarning() << "Intento de marcar plato terminado por un cliente que no es EstacionCocina. Ignorando.";
+    return;
+  }
+  std::string nombreEstacion = remitente->getNombreEstacion().toStdString(); 
+
+  if (m_pedidosActivos.count(idPedido) == 0) return;
+
+  auto& pedido = m_pedidosActivos.at(idPedido);
+  bool todosTerminados = true;
+  bool platoEncontrado = false;
+
+  for (auto& plato : pedido.platos) {
+    if (plato.id_instancia == idInstancia) {
+      const auto& platoDef = m_menu.at(plato.id_plato_definicion);
+      if (platoDef.estacion != nombreEstacion) {
+        qWarning() << "Estación" << QString::fromStdString(nombreEstacion) 
+                   << "intentó finalizar un plato que no le pertenece (Pertenece a"
+                   << QString::fromStdString(platoDef.estacion) << ").";
+        return; // Ignorar la solicitud por seguridad.
       }
-      if (plato.estado != EstadoPlato::FINALIZADO && plato.estado != EstadoPlato::ENTREGADO) {
-        todosTerminados = false;
-      }
+      plato.estado = EstadoPlato::FINALIZADO;
+      plato.timestamp_ultimo_cambio = std::chrono::system_clock::now();
+      platoEncontrado = true;
     }
-    if (todosTerminados) {
-      pedido.estado_general = EstadoPedido::COMPLETADO;
+    if (plato.estado != EstadoPlato::FINALIZADO && plato.estado != EstadoPlato::ENTREGADO &&
+        plato.estado != EstadoPlato::CANCELADO) {
+      todosTerminados = false;
     }
   }
-  notificarEstacion(nombreEstacion);
+
+  if(!platoEncontrado) return;
+
+  QJsonObject notifActualizacionPlato;
+  notifActualizacionPlato[Protocolo::EVENTO] = "PLATO_ESTADO_CAMBIADO";
+  QJsonObject dataPlato;
+  dataPlato["id_pedido"] = QJsonValue::fromVariant(QVariant::fromValue(idPedido));
+  dataPlato["id_instancia"] = QJsonValue::fromVariant(QVariant::fromValue(idInstancia));
+  dataPlato["nuevo_estado"] = SerializadorJSON::estadoPlatoToString(EstadoPlato::FINALIZADO);
+  notifActualizacionPlato[Protocolo::DATA] = dataPlato;
+  notificarManagersYRanking_unlocked(notifActualizacionPlato);
+
+  if (todosTerminados) {
+    pedido.estado_general = EstadoPedido::COMPLETADO;
+
+    QJsonObject notifPedidoCompletado;
+    notifPedidoCompletado[Protocolo::EVENTO] = "PEDIDO_COMPLETADO";
+    QJsonObject dataPedido;
+    dataPedido["id_pedido"] = QJsonValue::fromVariant(QVariant::fromValue(idPedido));
+    notifPedidoCompletado[Protocolo::DATA] = dataPedido;
+    notificarManagersYRanking_unlocked(notifPedidoCompletado);
+  }
 }
 
 void LogicaNegocio::procesarConfirmarEntrega(const QJsonObject& data, ManejadorCliente* remitente) {
+  std::lock_guard<std::mutex> lock(m_mutex);
   long long idPedido = data["id_pedido"].toVariant().toLongLong();
+
   if (m_pedidosActivos.count(idPedido) == 0) return;
+
   PedidoMesa& pedido = m_pedidosActivos.at(idPedido);
   int idRecepcionista = pedido.id_recepcionista;
   bool platoListo = false;
@@ -213,26 +274,70 @@ void LogicaNegocio::procesarConfirmarEntrega(const QJsonObject& data, ManejadorC
     }
   }
   if (platoListo) {
-    notificarRecepcionista(idRecepcionista, idPedido);
+    notificarRecepcionista_unlocked(idRecepcionista, idPedido);
   }
+
+  QJsonObject notificacion;
+  notificacion[Protocolo::EVENTO] = "PEDIDO_ENTREGADO";
+  QJsonObject dataNotif;
+  dataNotif["id_pedido"] = QJsonValue::fromVariant(QVariant::fromValue(idPedido));
+  notificacion[Protocolo::DATA] = dataNotif;
+  notificarManagersYRanking_unlocked(notificacion);
 }
 
 void LogicaNegocio::procesarDevolverPlato(const QJsonObject& data, ManejadorCliente* remitente) {
+  std::lock_guard<std::mutex> lock(m_mutex);
+
   long long idPedido = data["id_pedido"].toVariant().toLongLong();
+  // Asumimos que se devuelve el primer plato finalizado que se encuentre
+  long long idInstanciaDevuelta = -1; 
+
   if (m_pedidosActivos.count(idPedido) == 0) return;
+
   PedidoMesa& pedido = m_pedidosActivos.at(idPedido);
   pedido.estado_general = EstadoPedido::EN_PROGRESO;
 
   for(auto& plato : pedido.platos) {
     if (plato.estado == EstadoPlato::FINALIZADO) {
       plato.estado = EstadoPlato::EN_PROGRESO;
+      idInstanciaDevuelta = plato.id_instancia;
       const auto& platoDef = m_menu.at(plato.id_plato_definicion);
-      InfoPlatoPrioridad info {pedido.id_pedido, plato.id_instancia, -9999.0}; // Máxima prioridad
+
+      InfoPlatoPrioridad info {pedido.id_pedido, plato.id_instancia, -9999.0};
       m_colasPorEstacion[platoDef.estacion].push(info);
       qDebug() << "Plato" << plato.id_instancia << "del pedido" << idPedido << "devuelto a cocina.";
-      break;
+
+      QJsonObject notificacionEstacion;
+      notificacionEstacion[Protocolo::EVENTO] = "NUEVO_PLATO_EN_COLA";
+      QJsonObject dataPlatoEstacion;
+      dataPlatoEstacion["nombre"] = QString::fromStdString(platoDef.nombre);
+      dataPlatoEstacion["id_pedido"] = QJsonValue::fromVariant(QVariant::fromValue(info.id_pedido));
+      dataPlatoEstacion["id_instancia"] = QJsonValue::fromVariant(QVariant::fromValue(info.id_instancia_plato));
+      dataPlatoEstacion["score"] = info.score_prioridad;
+      notificacionEstacion[Protocolo::DATA] = dataPlatoEstacion;
+      notificarEstacion_unlocked(platoDef.estacion, notificacionEstacion);
+
+      break; // Solo devolvemos un plato a la vez
     }
   }
+
+  if (idInstanciaDevuelta == -1) return; 
+
+  QJsonObject notifMover;
+  notifMover[Protocolo::EVENTO] = "PEDIDO_A_PROGRESO";
+  QJsonObject dataMover;
+  dataMover["id_pedido"] = QJsonValue::fromVariant(QVariant::fromValue(idPedido));
+  notifMover[Protocolo::DATA] = dataMover;
+  notificarManagersYRanking_unlocked(notifMover);
+
+  QJsonObject notifActualizarPlato;
+  notifActualizarPlato[Protocolo::EVENTO] = "PLATO_ESTADO_CAMBIADO";
+  QJsonObject dataPlatoManager;
+  dataPlatoManager["id_pedido"] = QJsonValue::fromVariant(QVariant::fromValue(idPedido));
+  dataPlatoManager["id_instancia"] = QJsonValue::fromVariant(QVariant::fromValue(idInstanciaDevuelta));
+  dataPlatoManager["nuevo_estado"] = SerializadorJSON::estadoPlatoToString(EstadoPlato::EN_PROGRESO);
+  notifActualizarPlato[Protocolo::DATA] = dataPlatoManager;
+  notificarManagersYRanking_unlocked(notifActualizarPlato);
 }
 
 void LogicaNegocio::clasificarPedidos(std::vector<PedidoMesa>& pendientes,
@@ -253,9 +358,12 @@ void LogicaNegocio::clasificarPedidos(std::vector<PedidoMesa>& pendientes,
         break;
     }
   }
+  std::sort(pendientes.begin(), pendientes.end(), [](const PedidoMesa& a, const PedidoMesa& b) {
+    return a.timestamp_creacion < b.timestamp_creacion;
+  });
 }
 
-QJsonObject LogicaNegocio::getEstadoParaManagerYRanking() {
+QJsonObject LogicaNegocio::getEstadoParaManagerYRanking(bool incluirMenu) {
   QJsonObject mensaje;
   QJsonObject data;
   std::vector<PedidoMesa> pendientes, enProgreso, terminados;
@@ -273,7 +381,6 @@ QJsonObject LogicaNegocio::getEstadoParaManagerYRanking() {
   data["pedidos_terminados"] = toJsonArray(terminados);
   
   QJsonArray rankingArray;
-  // Lógica de ranking (simplificada)
   for(const auto& par : m_conteoPlatosRanking){
       QJsonObject item;
       item["nombre"] = QString::fromStdString(m_menu.at(par.first).nombre);
@@ -281,6 +388,14 @@ QJsonObject LogicaNegocio::getEstadoParaManagerYRanking() {
       rankingArray.append(item);
   }
   data["ranking"] = rankingArray;
+
+  if (incluirMenu) {
+    QJsonArray menuArray;
+    for(const auto& par : m_menu) {
+      menuArray.append(SerializadorJSON::platoDefinicionToJson(par.second));
+    }
+    data["menu"] = menuArray;
+  }
 
   mensaje[Protocolo::EVENTO] = Protocolo::ACTUALIZACION_ESTADO_GENERAL;
   mensaje[Protocolo::DATA] = data;
@@ -328,47 +443,53 @@ QJsonObject LogicaNegocio::getEstadoParaEstacion(const std::string& nombreEstaci
   return mensaje;
 }
 
-void LogicaNegocio::notificarManagersYRanking() {
-  QJsonObject estado = getEstadoParaManagerYRanking();
-  for (ManejadorCliente* manejador : m_manejadoresActivos) {
-    QString rol = manejador->getRol();
-    if (rol == "ManagerChef" || rol == "Ranking") {
-      emit enviarRespuesta(manejador, estado);
-    }
-  }
+void LogicaNegocio::notificarManagersYRanking(const QJsonObject& mensaje) {
+  std::lock_guard<std::mutex> lock(m_mutex);
+  notificarManagersYRanking_unlocked(mensaje);
 }
 
-void LogicaNegocio::notificarEstacion(const std::string& nombreEstacion) {
-  QJsonObject estadoEstacion = getEstadoParaEstacion(nombreEstacion);
-  
-  if (estadoEstacion.isEmpty()) return;
-
-  for (ManejadorCliente* manejador : m_manejadoresActivos) {
-    // Asumimos que la estación se identifica con su nombre en el campo 'rol'
-    // o en un campo adicional. Para simplificar, comparamos el nombre de la estación
-    // con un identificador del cliente.
-    // NOTA: Esto requiere que el cliente Estación se identifique con su nombre.
-    // Por ejemplo: { "comando": "IDENTIFICARSE", "rol": "EstacionCocina", "nombre_estacion": "Carnes" }
-    // Asumiremos que el 'nombre' se guarda en el 'rol' para este ejemplo.
-    if (manejador->getRol().toStdString() == nombreEstacion) {
-      emit enviarRespuesta(manejador, estadoEstacion);
-      qDebug() << "Notificando a la estación:" << QString::fromStdString(nombreEstacion);
-    }
-  }
+void LogicaNegocio::notificarEstacion(const std::string& nombreEstacion, const QJsonObject& mensaje) {
+  std::lock_guard<std::mutex> lock(m_mutex);
+  notificarEstacion_unlocked(nombreEstacion, mensaje);
 }
 
 void LogicaNegocio::notificarRecepcionista(int idRecepcionista, long long idPedido) {
+  std::lock_guard<std::mutex> lock(m_mutex);
+  notificarRecepcionista_unlocked(idRecepcionista, idPedido);
+}
+
+void LogicaNegocio::notificarManagersYRanking_unlocked(const QJsonObject& mensaje) {
+  for (ManejadorCliente* manejador : m_manejadoresActivos) {
+    TipoActor tipo = manejador->getTipoActor();
+    if (tipo == TipoActor::MANAGER_CHEF || tipo == TipoActor::RANKING) {
+      emit enviarRespuesta(manejador, mensaje);
+    }
+  }
+}
+
+void LogicaNegocio::notificarEstacion_unlocked(const std::string& nombreEstacion, const QJsonObject& mensaje) {
+  for (ManejadorCliente* manejador : m_manejadoresActivos) {
+    if (manejador->getTipoActor() == TipoActor::ESTACION_COCINA && 
+        manejador->getNombreEstacion().toStdString() == nombreEstacion) {
+      emit enviarRespuesta(manejador, mensaje);
+      qDebug() << "Notificando a la estación:" << QString::fromStdString(nombreEstacion);
+      break; 
+    }
+  }
+}
+
+void LogicaNegocio::notificarRecepcionista_unlocked(int idRecepcionista, long long idPedido) {
   QJsonObject notificacion;
   notificacion[Protocolo::EVENTO] = "PLATO_LISTO";
   QJsonObject data;
   data["id_pedido"] = QJsonValue::fromVariant(QVariant::fromValue(idPedido));
   if (m_pedidosActivos.count(idPedido)) {
-      data["mesa"] = m_pedidosActivos.at(idPedido).numero_mesa;
+    data["mesa"] = m_pedidosActivos.at(idPedido).numero_mesa;
   }
   notificacion[Protocolo::DATA] = data;
 
   for (ManejadorCliente* manejador : m_manejadoresActivos) {
-    if (manejador->getRol() == "Recepcionista" && manejador->getIdActor() == idRecepcionista) {
+    if (manejador->getTipoActor() == TipoActor::RECEPCIONISTA && manejador->getIdActor() == idRecepcionista) {
       emit enviarRespuesta(manejador, notificacion);
       qDebug() << "Notificando a recepcionista" << idRecepcionista << "que el pedido" << idPedido << "tiene platos listos.";
       break; 
@@ -407,5 +528,3 @@ void LogicaNegocio::simularRecepcionDePedidos() {
 
   qDebug() << "--- SIMULACIÓN FINALIZADA ---";
 }
-
-

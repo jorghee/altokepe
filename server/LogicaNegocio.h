@@ -51,16 +51,19 @@ private:
   void procesarDevolverPlato(const QJsonObject& data, ManejadorCliente* remitente); 
 
   // Lógica de estado y notificación dirigida
-  void notificarManagersYRanking();
-  void notificarEstacion(const std::string& nombreEstacion);
+  void notificarManagersYRanking(const QJsonObject& mensaje);
+  void notificarEstacion(const std::string& nombreEstacion, const QJsonObject& mensaje);
   void notificarRecepcionista(int idRecepcionista, long long idPedido);
+  void notificarManagersYRanking_unlocked(const QJsonObject& mensaje);
+  void notificarEstacion_unlocked(const std::string& nombreEstacion, const QJsonObject& mensaje);
+  void notificarRecepcionista_unlocked(int idRecepcionista, long long idPedido);
 
   void clasificarPedidos(
     std::vector<PedidoMesa>& pendientes,
     std::vector<PedidoMesa>& enProgreso,
     std::vector<PedidoMesa>& terminados
   );
-  QJsonObject getEstadoParaManagerYRanking();
+  QJsonObject getEstadoParaManagerYRanking(bool incluirMenu = false);
   QJsonObject getEstadoParaEstacion(const std::string& nombreEstacion);
 
   std::mutex m_mutex;
