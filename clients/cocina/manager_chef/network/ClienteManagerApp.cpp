@@ -12,6 +12,7 @@ ClienteManagerApp::ClienteManagerApp(QObject* parent) : QObject(parent) {
   m_clienteTCP = new ClienteTCP(this);
 
   // Conexion de Red
+  connect(m_clienteTCP, &ClienteTCP::conectado, this, &ClienteManagerApp::onConectado);
   connect(m_clienteTCP, &ClienteTCP::nuevoMensajeRecibido, this, &ClienteManagerApp::onMensajeRecibido);
 
   // Conexiones de Acción (UI -> Lógica)
@@ -22,16 +23,26 @@ ClienteManagerApp::ClienteManagerApp(QObject* parent) : QObject(parent) {
 }
 
 void ClienteManagerApp::iniciar() {
-  m_ventana->show();
   m_clienteTCP->conectar("127.0.0.1", 5555); // Conectar a localhost
+  m_ventana->show();
+}
+
+void ClienteManagerApp::onConectado() {
+  qDebug() << "Conexión exitosa. Identificándose como ManagerChef...";
+  QJsonObject identificacion;
+  identificacion[Protocolo::COMANDO] = Protocolo::IDENTIFICARSE;
+  identificacion["rol"] = "ManagerChef";
+  // El Manager Chef no necesita un ID específico, el rol es suficiente.
+  m_clienteTCP->enviarMensaje(identificacion);
 }
 
 void ClienteManagerApp::onMensajeRecibido(const QJsonObject& mensaje) {
   QString evento = mensaje[Protocolo::EVENTO].toString();
+  QJsonObject data = mensaje[Protocolo::DATA].toObject();
+
+  qDebug() << "Evento recibido:" << evento;
 
   if (evento == Protocolo::ACTUALIZACION_ESTADO_GENERAL) {
-    QJsonObject data = mensaje[Protocolo::DATA].toObject();
-
     if (data.contains("menu")) {
       m_menu.clear();
       QJsonArray menuArray = data["menu"].toArray();
@@ -39,7 +50,7 @@ void ClienteManagerApp::onMensajeRecibido(const QJsonObject& mensaje) {
         PlatoDefinicion plato = SerializadorJSON::jsonToPlatoDefinicion(val.toObject());
         m_menu[plato.id] = plato;
       }
-      qDebug() << "Menú recibido y almacenado con" << m_menu.size() << "platos.";
+      qDebug() << "Menú inicial recibido con" << m_menu.size() << "platos.";
     }
 
     auto deserializarPedidos = [](const QJsonObject& data, const QString& clave) {
@@ -55,7 +66,28 @@ void ClienteManagerApp::onMensajeRecibido(const QJsonObject& mensaje) {
     std::vector<PedidoMesa> enProgreso = deserializarPedidos(data, "pedidos_en_progreso");
     std::vector<PedidoMesa> terminados = deserializarPedidos(data, "pedidos_terminados");
     
-    m_ventana->actualizarVistas(pendientes, enProgreso, terminados, m_menu);
+    m_ventana->cargarEstadoInicial(pendientes, enProgreso, terminados, m_menu);
+  } else if (evento == "PEDIDO_NUEVO") {
+    PedidoMesa pedido = SerializadorJSON::jsonToPedidoMesa(data);
+    m_ventana->onPedidoNuevo(pedido, m_menu);
+  
+  } else if (evento == "PEDIDO_A_PROGRESO") {
+    long long idPedido = data["id_pedido"].toVariant().toLongLong();
+    m_ventana->onPedidoAMover(idPedido, "progreso");
+  
+  } else if (evento == "PEDIDO_COMPLETADO") {
+    long long idPedido = data["id_pedido"].toVariant().toLongLong();
+    m_ventana->onPedidoAMover(idPedido, "terminado");
+  
+  } else if (evento == "PEDIDO_CANCELADO" || evento == "PEDIDO_ENTREGADO") {
+    long long idPedido = data["id_pedido"].toVariant().toLongLong();
+    m_ventana->onPedidoAEliminar(idPedido);
+  
+  } else if (evento == "PLATO_ESTADO_CAMBIADO") {
+    long long idPedido = data["id_pedido"].toVariant().toLongLong();
+    long long idInstancia = data["id_instancia"].toVariant().toLongLong();
+    QString nuevoEstado = data["nuevo_estado"].toString();
+    m_ventana->onActualizarEstadoPlato(idPedido, idInstancia, nuevoEstado);
   }
 }
 
