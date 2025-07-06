@@ -15,10 +15,6 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Network)
 # Esto permite que #include "common/network/SerializadorJSON.h" funcione.
 include_directories(../../../)
 
-set(RESOURCE_FILES
-  resources.qrc
-)
-
 # Definir el ejecutable y sus archivos fuente.
 # Las rutas deben ser relativas a ESTE archivo CMakeLists.txt
 add_executable(ManagerChefClient
@@ -26,7 +22,7 @@ add_executable(ManagerChefClient
   main.cpp
   
   # Recursos de la aplicación
-  ${RESOURCE_FILES}
+  resources.qrc
   
   # Capa de Red (están en subdirectorios de la ubicación actual)
   network/ClienteManagerApp.cpp

@@ -6,7 +6,7 @@
 int main(int argc, char* argv[]) {
   QApplication a(argc, argv);
 
-  QFile styleFile("styles.qss"); // Busca en el directorio de trabajo
+  QFile styleFile(":/styles.qss"); // Busca en el directorio de trabajo
   if (styleFile.open(QFile::ReadOnly)) {
     a.setStyleSheet(QLatin1String(styleFile.readAll()));
     styleFile.close();
