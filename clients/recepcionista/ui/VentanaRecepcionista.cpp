@@ -1,35 +1,66 @@
+// VentanaRecepcionista.cpp
 #include "VentanaRecepcionista.h"
 #include <QVBoxLayout>
-#include <QPushButton>
+#include <QSpinBox>
+#include <QMessageBox>
 #include <QJsonArray>
 #include <QJsonObject>
-#include <QDebug>
 
-VentanaRecepcionista::VentanaRecepcionista(QWidget* parent) : QWidget(parent) {
-    QVBoxLayout* layout = new QVBoxLayout(this);
+VentanaRecepcionista::VentanaRecepcionista(QWidget *parent) : QWidget(parent) {
+    cliente.conectarAlServidor("127.0.0.1", 5555);
+    cargarUI();
+}
 
-    QPushButton* botonPedido = new QPushButton("Enviar pedido mesa 4", this);
-    layout->addWidget(botonPedido);
+void VentanaRecepcionista::cargarUI() {
+    comboMesas = new QComboBox(this);
+    for (int i = 1; i <= 10; ++i)
+        comboMesas->addItem(QString::number(i));
 
-    connect(botonPedido, &QPushButton::clicked, this, [this]() {
+    tablaPlatos = new QTableWidget(0, 2, this);
+    tablaPlatos->setHorizontalHeaderLabels({"Plato", "Cantidad"});
+
+    // EJEMPLO: Simular menú con 2 platos
+    QStringList nombres = {"Ceviche", "Lomo Saltado"};
+    QList<int> ids = {101, 201};
+
+    for (int i = 0; i < nombres.size(); ++i) {
+        tablaPlatos->insertRow(i);
+        auto *item = new QTableWidgetItem(nombres[i]);
+        item->setData(Qt::UserRole, ids[i]);
+        tablaPlatos->setItem(i, 0, item);
+
+        auto *spin = new QSpinBox();
+        spin->setRange(0, 10);
+        tablaPlatos->setCellWidget(i, 1, spin);
+    }
+
+    botonEnviar = new QPushButton("Enviar Pedido", this);
+    connect(botonEnviar, &QPushButton::clicked, this, [this]() {
         QJsonArray platos;
+        for (int i = 0; i < tablaPlatos->rowCount(); ++i) {
+            int cantidad = static_cast<QSpinBox *>(tablaPlatos->cellWidget(i, 1))->value();
+            int idPlato = tablaPlatos->item(i, 0)->data(Qt::UserRole).toInt();
 
-        QJsonObject plato1;
-        plato1["id"] = 101;
-        plato1["cantidad"] = 2;
-        platos.append(plato1);
+            if (cantidad > 0) {
+                platos.append(QJsonObject{
+                    {"id", idPlato},
+                    {"cantidad", cantidad}
+                });
+            }
+        }
 
-        QJsonObject plato2;
-        plato2["id"] = 102;
-        plato2["cantidad"] = 1;
-        platos.append(plato2);
+        if (platos.isEmpty()) {
+            QMessageBox::warning(this, "Error", "Debe elegir al menos un plato");
+            return;
+        }
 
-        cliente.enviarNuevoPedido(4, 101, platos);
+        int mesa = comboMesas->currentText().toInt();
+        cliente.enviarNuevoPedido(mesa, 101, platos);
+        QMessageBox::information(this, "Enviado", "Pedido enviado correctamente");
     });
 
-    connect(&cliente, &ClienteRecepcionista::mensajeRecibido, this, [](const QJsonObject& msg){
-        qDebug() << "📩 Evento recibido:" << msg;
-    });
-
-    cliente.conectarAlServidor();
+    auto *layout = new QVBoxLayout(this);
+    layout->addWidget(comboMesas);
+    layout->addWidget(tablaPlatos);
+    layout->addWidget(botonEnviar);
 }
