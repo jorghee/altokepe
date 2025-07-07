@@ -68,6 +68,26 @@ void LogicaNegocio::enviarEstadoInicial(ManejadorCliente* cliente) {
     estado = getEstadoParaManagerYRanking(true);
   } else if (tipo == TipoActor::ESTACION_COCINA) {
     estado = getEstadoParaEstacion(cliente->getNombreEstacion().toStdString());
+  } else if (tipo == TipoActor::RECEPCIONISTA) {
+    QJsonObject mensaje;
+    QJsonArray menuArray;
+
+    for (const auto& par : m_menu) {
+      const PlatoDefinicion& plato = par.second;
+      QJsonObject platoJson;
+      platoJson["id"] = plato.id;
+      platoJson["nombre"] = QString::fromStdString(plato.nombre);
+      platoJson["precio"] = plato.costo;
+      platoJson["tiempo_preparacion"] = plato.tiempo_preparacion_estimado;
+      platoJson["categoria"] = QString::fromStdString(plato.estacion);
+      menuArray.append(platoJson);
+    }
+
+    mensaje[Protocolo::EVENTO] = "ACTUALIZACION_MENU";
+    mensaje[Protocolo::DATA] = QJsonObject{ {"menu", menuArray} };
+
+    emit enviarRespuesta(cliente, mensaje);
+    return; // Ya enviamos el estado especial para el recepcionista, salimos
   }
 
   if (!estado.isEmpty()) {

@@ -13,4 +13,11 @@ public:
 
 private:
     QTcpSocket *socket;
+    QJsonArray menu;
+
+private slots:
+    void leerMensaje();
+
+signals:
+    void menuActualizado(const QJsonArray &menu);
 };

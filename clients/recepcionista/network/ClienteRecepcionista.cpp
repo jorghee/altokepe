@@ -1,16 +1,23 @@
-// ClienteRecepcionista.cpp
 #include "ClienteRecepcionista.h"
 #include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 #include <QDebug>
+#include <QTcpSocket>
 
-ClienteRecepcionista::ClienteRecepcionista(QObject *parent) : QObject(parent), socket(new QTcpSocket(this)) {}
+ClienteRecepcionista::ClienteRecepcionista(QObject *parent)
+    : QObject(parent), socket(new QTcpSocket(this)) {
+
+    // Conexión para leer los mensajes del servidor
+    connect(socket, &QTcpSocket::readyRead, this, &ClienteRecepcionista::leerMensaje);
+}
 
 void ClienteRecepcionista::conectarAlServidor(const QString &host, quint16 puerto) {
     socket->connectToHost(host, puerto);
-    if (socket->waitForConnected(5555)) {
+    if (socket->waitForConnected(5000)) {
         qDebug() << "Conectado al servidor";
 
-        // Identificarse
+        // Identificarse como Recepcionista
         QJsonObject msg{
             {"comando", "IDENTIFICARSE"},
             {"rol", "Recepcionista"},
@@ -30,4 +37,25 @@ void ClienteRecepcionista::enviarNuevoPedido(int mesa, int idRecepcionista, cons
         {"platos", platos}
     };
     socket->write(QJsonDocument(pedido).toJson(QJsonDocument::Compact) + "\n");
+}
+
+void ClienteRecepcionista::leerMensaje() {
+    while (socket->canReadLine()) {
+        QByteArray linea = socket->readLine().trimmed();
+        QJsonDocument doc = QJsonDocument::fromJson(linea);
+        if (!doc.isNull() && doc.isObject()) {
+            QJsonObject obj = doc.object();
+            qDebug() << "Mensaje recibido:";
+            qDebug().noquote() << QJsonDocument(obj).toJson(QJsonDocument::Indented);
+
+            if (obj["evento"].toString() == "ACTUALIZACION_MENU") {
+                QJsonObject data = obj["data"].toObject();
+                QJsonArray menu = data["menu"].toArray();
+                emit menuActualizado(menu);  // ✅ Emitimos la señal
+            }
+
+        } else {
+            qWarning() << "JSON inválido recibido:" << linea;
+        }
+    }
 }

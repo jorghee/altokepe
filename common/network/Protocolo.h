@@ -19,7 +19,6 @@ namespace Protocolo {
   // --- Eventos Servidor -> Cliente ---
   constexpr const char* ACTUALIZACION_ESTADO_GENERAL = "ACTUALIZACION_ESTADO_GENERAL";
   constexpr const char* ACTUALIZACION_ESTADO_ESTACION = "ACTUALIZACION_ESTADO_ESTACION";
-
   // --- Respuestas Servidor -> Cliente ---
   constexpr const char* OK = "OK";
   constexpr const char* ERROR = "ERROR";

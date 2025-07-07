@@ -1,4 +1,3 @@
-// VentanaRecepcionista.h
 #pragma once
 
 #include <QWidget>
@@ -19,4 +18,7 @@ private:
     ClienteRecepcionista cliente;
 
     void cargarUI();
+    
+public slots:
+    void actualizarMenu(const QJsonArray &menuRecibido);
 };

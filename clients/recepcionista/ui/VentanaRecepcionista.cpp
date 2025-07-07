@@ -1,4 +1,3 @@
-// VentanaRecepcionista.cpp
 #include "VentanaRecepcionista.h"
 #include <QVBoxLayout>
 #include <QSpinBox>
@@ -9,7 +8,10 @@
 VentanaRecepcionista::VentanaRecepcionista(QWidget *parent) : QWidget(parent) {
     cliente.conectarAlServidor("127.0.0.1", 5555);
     cargarUI();
+    connect(&cliente, &ClienteRecepcionista::menuActualizado,
+            this, &VentanaRecepcionista::actualizarMenu);
 }
+
 
 void VentanaRecepcionista::cargarUI() {
     comboMesas = new QComboBox(this);
@@ -18,21 +20,6 @@ void VentanaRecepcionista::cargarUI() {
 
     tablaPlatos = new QTableWidget(0, 2, this);
     tablaPlatos->setHorizontalHeaderLabels({"Plato", "Cantidad"});
-
-    // EJEMPLO: Simular menú con 2 platos
-    QStringList nombres = {"Ceviche", "Lomo Saltado"};
-    QList<int> ids = {101, 201};
-
-    for (int i = 0; i < nombres.size(); ++i) {
-        tablaPlatos->insertRow(i);
-        auto *item = new QTableWidgetItem(nombres[i]);
-        item->setData(Qt::UserRole, ids[i]);
-        tablaPlatos->setItem(i, 0, item);
-
-        auto *spin = new QSpinBox();
-        spin->setRange(0, 10);
-        tablaPlatos->setCellWidget(i, 1, spin);
-    }
 
     botonEnviar = new QPushButton("Enviar Pedido", this);
     connect(botonEnviar, &QPushButton::clicked, this, [this]() {
@@ -63,4 +50,25 @@ void VentanaRecepcionista::cargarUI() {
     layout->addWidget(comboMesas);
     layout->addWidget(tablaPlatos);
     layout->addWidget(botonEnviar);
+}
+
+void VentanaRecepcionista::actualizarMenu(const QJsonArray &menu) {
+    tablaPlatos->setRowCount(0);  // Limpiar
+
+    for (int i = 0; i < menu.size(); ++i) {
+        QJsonObject plato = menu[i].toObject();
+        int row = tablaPlatos->rowCount();
+        tablaPlatos->insertRow(row);
+
+        QString nombre = plato["nombre"].toString();
+        int id = plato["id"].toInt();
+
+        auto *item = new QTableWidgetItem(nombre);
+        item->setData(Qt::UserRole, id);
+        tablaPlatos->setItem(row, 0, item);
+
+        auto *spin = new QSpinBox();
+        spin->setRange(0, 10);
+        tablaPlatos->setCellWidget(row, 1, spin);
+    }
 }
