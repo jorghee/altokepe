@@ -13,9 +13,9 @@
 *.ilk
 
 # === Qt build folders ===
-/build/
-/build-*/
-build-*/
+*build/
+*build-*/
+*build-*/
 release/
 debug/
 Makefile*
