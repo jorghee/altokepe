@@ -1,0 +1,37 @@
+[
+  {
+    "id": 101,
+    "nombre": "Lomo Saltado",
+    "costo": 35.50,
+    "tiempo_preparacion_estimado": 15,
+    "estacion": "Carnes"
+  },
+  {
+    "id": 102,
+    "nombre": "Aji de Gallina",
+    "costo": 28.00,
+    "tiempo_preparacion_estimado": 20,
+    "estacion": "Guisos"
+  },
+  {
+    "id": 201,
+    "nombre": "Ceviche Clásico",
+    "costo": 38.00,
+    "tiempo_preparacion_estimado": 12,
+    "estacion": "Fríos"
+  },
+  {
+    "id": 301,
+    "nombre": "Torta de Chocolate",
+    "costo": 15.00,
+    "tiempo_preparacion_estimado": 5,
+    "estacion": "Postres"
+  },
+  {
+    "id": 401,
+    "nombre": "Chicha Morada",
+    "costo": 8.00,
+    "tiempo_preparacion_estimado": 2,
+    "estacion": "Bebidas"
+  }
+]
