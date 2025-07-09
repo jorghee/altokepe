@@ -42,6 +42,8 @@ public:
 signals:
   void enviarRespuesta(ManejadorCliente* cliente, const QJsonObject& mensaje);
 
+
+  //LOGICA PARA RECEPCIONSITAS
 private:
   void procesarNuevoPedido(const QJsonObject& data, ManejadorCliente* remitente);
   void procesarPrepararPedido(const QJsonObject& data, ManejadorCliente* remitente);
@@ -50,6 +52,7 @@ private:
   void procesarConfirmarEntrega(const QJsonObject& data, ManejadorCliente* remitente);
   void procesarDevolverPlato(const QJsonObject& data, ManejadorCliente* remitente); 
 
+  
   // Lógica de estado y notificación dirigida
   void notificarManagersYRanking(const QJsonObject& mensaje);
   void notificarEstacion(const std::string& nombreEstacion, const QJsonObject& mensaje);
