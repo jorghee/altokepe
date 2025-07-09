@@ -1,37 +1,51 @@
 [
   {
-    "id": 101,
-    "nombre": "Lomo Saltado",
-    "costo": 35.50,
-    "tiempo_preparacion_estimado": 15,
-    "estacion": "Carnes"
+    "id": 1,
+    "nombre": "Aalopuri",
+    "costo": 20.0,
+    "tiempo_preparacion_estimado": 24,
+    "estacion": "Snack"
   },
   {
-    "id": 102,
-    "nombre": "Aji de Gallina",
-    "costo": 28.00,
-    "tiempo_preparacion_estimado": 20,
-    "estacion": "Guisos"
+    "id": 2,
+    "nombre": "Vadapav",
+    "costo": 20.0,
+    "tiempo_preparacion_estimado": 18,
+    "estacion": "Snack"
   },
   {
-    "id": 201,
-    "nombre": "Ceviche Clásico",
-    "costo": 38.00,
+    "id": 3,
+    "nombre": "Sugarcane juice",
+    "costo": 25.0,
+    "tiempo_preparacion_estimado": 18,
+    "estacion": "Bebida"
+  },
+  {
+    "id": 4,
+    "nombre": "Panipuri",
+    "costo": 20.0,
+    "tiempo_preparacion_estimado": 17,
+    "estacion": "Snack"
+  },
+  {
+    "id": 5,
+    "nombre": "Frankie",
+    "costo": 50.0,
+    "tiempo_preparacion_estimado": 23,
+    "estacion": "Principal"
+  },
+  {
+    "id": 6,
+    "nombre": "Sandwich",
+    "costo": 60.0,
     "tiempo_preparacion_estimado": 12,
-    "estacion": "Fríos"
+    "estacion": "Principal"
   },
   {
-    "id": 301,
-    "nombre": "Torta de Chocolate",
-    "costo": 15.00,
-    "tiempo_preparacion_estimado": 5,
-    "estacion": "Postres"
-  },
-  {
-    "id": 401,
-    "nombre": "Chicha Morada",
-    "costo": 8.00,
-    "tiempo_preparacion_estimado": 2,
-    "estacion": "Bebidas"
+    "id": 7,
+    "nombre": "Cold coffee",
+    "costo": 40.0,
+    "tiempo_preparacion_estimado": 23,
+    "estacion": "Otro"
   }
 ]

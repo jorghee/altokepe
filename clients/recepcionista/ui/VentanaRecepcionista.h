@@ -1,24 +1,21 @@
 #pragma once
 
 #include <QWidget>
-#include <QTableWidget>
-#include <QComboBox>
-#include <QPushButton>
-#include "../network/ClienteRecepcionista.h"
+
+class PanelMesas;
+class PanelPedido;
 
 class VentanaRecepcionista : public QWidget {
     Q_OBJECT
 public:
-    VentanaRecepcionista(QWidget *parent = nullptr);
+    explicit VentanaRecepcionista(QWidget *parent = nullptr);
 
 private:
-    QComboBox *comboMesas;
-    QTableWidget *tablaPlatos;
-    QPushButton *botonEnviar;
-    ClienteRecepcionista cliente;
+    PanelMesas *panelMesas;
+    PanelPedido *panelPedido;
 
-    void cargarUI();
-    
-public slots:
-    void actualizarMenu(const QJsonArray &menuRecibido);
+    void configurarUI();
+
+private slots:
+    void manejarSeleccionMesa(int numeroMesa);
 };

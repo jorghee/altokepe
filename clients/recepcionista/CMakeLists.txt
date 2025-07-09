@@ -16,7 +16,10 @@ add_executable(ClienteRecepcionista
   # Archivos UI
   ui/VentanaRecepcionista.cpp
   ui/VentanaRecepcionista.h
-  ui/...
+  ui/PanelMesas.cpp
+  ui/PanelMesas.h
+  ui/PanelPedido.cpp
+  ui/PanelPedido.h
 
   # Archivos de red
   network/ClienteRecepcionista.cpp

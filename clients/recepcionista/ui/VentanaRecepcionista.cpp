@@ -1,74 +1,62 @@
 #include "VentanaRecepcionista.h"
+#include "PanelMesas.h"
+#include "PanelPedido.h"
+
+#include <QHBoxLayout>
 #include <QVBoxLayout>
-#include <QSpinBox>
-#include <QMessageBox>
-#include <QJsonArray>
-#include <QJsonObject>
+#include <QLabel>
 
-VentanaRecepcionista::VentanaRecepcionista(QWidget *parent) : QWidget(parent) {
-    cliente.conectarAlServidor("127.0.0.1", 5555);
-    cargarUI();
-    connect(&cliente, &ClienteRecepcionista::menuActualizado,
-            this, &VentanaRecepcionista::actualizarMenu);
+VentanaRecepcionista::VentanaRecepcionista(QWidget *parent)
+    : QWidget(parent) {
+    configurarUI();
+
+    connect(panelMesas, &PanelMesas::mesaSeleccionada,
+            this, &VentanaRecepcionista::manejarSeleccionMesa);
 }
 
+void VentanaRecepcionista::configurarUI() {
+    panelMesas = new PanelMesas(this);
+    panelPedido = new PanelPedido(this);
 
-void VentanaRecepcionista::cargarUI() {
-    comboMesas = new QComboBox(this);
-    for (int i = 1; i <= 10; ++i)
-        comboMesas->addItem(QString::number(i));
+    // 🟥 Cabecera principal
+    auto *titulo = new QLabel("Sistema Altoke Pe", this);
+    titulo->setObjectName("tituloPrincipal");
+    titulo->setAlignment(Qt::AlignCenter);
+    titulo->setStyleSheet("font-size: 48px; font-weight: bold;");
 
-    tablaPlatos = new QTableWidget(0, 2, this);
-    tablaPlatos->setHorizontalHeaderLabels({"Plato", "Cantidad"});
+    // 🟦 Subtítulo izquierdo
+    auto *subtituloMesas = new QLabel("Seleccione la Mesa", this);
+    subtituloMesas->setStyleSheet("font-size: 28px; font-weight: bold;");
+    auto *layoutIzquierdo = new QVBoxLayout;
+    layoutIzquierdo->setAlignment(Qt::AlignTop);  // 👈 Alinear arriba
+    layoutIzquierdo->setSpacing(10);
+    layoutIzquierdo->setContentsMargins(10, 10, 10, 10);
+    layoutIzquierdo->addWidget(subtituloMesas);
+    layoutIzquierdo->addWidget(panelMesas);
 
-    botonEnviar = new QPushButton("Enviar Pedido", this);
-    connect(botonEnviar, &QPushButton::clicked, this, [this]() {
-        QJsonArray platos;
-        for (int i = 0; i < tablaPlatos->rowCount(); ++i) {
-            int cantidad = static_cast<QSpinBox *>(tablaPlatos->cellWidget(i, 1))->value();
-            int idPlato = tablaPlatos->item(i, 0)->data(Qt::UserRole).toInt();
+    // 🟩 Subtítulo derecho
+    auto *subtituloPedido = new QLabel("Pedido", this);
+    subtituloPedido->setStyleSheet("font-size: 28px; font-weight: bold;");
+    auto *layoutDerecho = new QVBoxLayout;
+    layoutDerecho->setAlignment(Qt::AlignTop);  // 👈 Alinear arriba
+    layoutDerecho->setSpacing(10);
+    layoutDerecho->setContentsMargins(10, 10, 10, 10);
+    layoutDerecho->addWidget(subtituloPedido);
+    layoutDerecho->addWidget(panelPedido);
 
-            if (cantidad > 0) {
-                platos.append(QJsonObject{
-                    {"id", idPlato},
-                    {"cantidad", cantidad}
-                });
-            }
-        }
+    // 📐 Layout central
+    auto *layoutCentral = new QHBoxLayout;
+    layoutCentral->addLayout(layoutIzquierdo, 3);
+    layoutCentral->addLayout(layoutDerecho, 2);
 
-        if (platos.isEmpty()) {
-            QMessageBox::warning(this, "Error", "Debe elegir al menos un plato");
-            return;
-        }
+    // 🧱 Layout principal
+    auto *layoutPrincipal = new QVBoxLayout(this);
+    layoutPrincipal->addWidget(titulo);
+    layoutPrincipal->addLayout(layoutCentral);
 
-        int mesa = comboMesas->currentText().toInt();
-        cliente.enviarNuevoPedido(mesa, 101, platos);
-        QMessageBox::information(this, "Enviado", "Pedido enviado correctamente");
-    });
-
-    auto *layout = new QVBoxLayout(this);
-    layout->addWidget(comboMesas);
-    layout->addWidget(tablaPlatos);
-    layout->addWidget(botonEnviar);
+    setLayout(layoutPrincipal);
 }
 
-void VentanaRecepcionista::actualizarMenu(const QJsonArray &menu) {
-    tablaPlatos->setRowCount(0);  // Limpiar
-
-    for (int i = 0; i < menu.size(); ++i) {
-        QJsonObject plato = menu[i].toObject();
-        int row = tablaPlatos->rowCount();
-        tablaPlatos->insertRow(row);
-
-        QString nombre = plato["nombre"].toString();
-        int id = plato["id"].toInt();
-
-        auto *item = new QTableWidgetItem(nombre);
-        item->setData(Qt::UserRole, id);
-        tablaPlatos->setItem(row, 0, item);
-
-        auto *spin = new QSpinBox();
-        spin->setRange(0, 10);
-        tablaPlatos->setCellWidget(row, 1, spin);
-    }
+void VentanaRecepcionista::manejarSeleccionMesa(int numeroMesa) {
+    panelPedido->setNumeroMesa(numeroMesa);
 }
