@@ -19,7 +19,9 @@ include_directories(../../../)
 add_executable(ManagerEstacionClient
   # Archivo principal
   main.cpp
-
+  # Estilos
+  resources.qrc     
+  styles.qss 
   # Capa de red
   network/ClienteEstacionApp.cpp
   network/ClienteTCP.cpp

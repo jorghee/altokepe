@@ -20,9 +20,9 @@ int main(int argc, char* argv[]) {
 
   qInfo() << "Servidor escuchando en el puerto" << port;
 
-  QTimer::singleShot(500, [](){
-    LogicaNegocio::instance()->simularRecepcionDePedidos();
-  });
+  // QTimer::singleShot(500, [](){
+    // LogicaNegocio::instance()->simularRecepcionDePedidos();
+  // });
 
   return a.exec();
 }
