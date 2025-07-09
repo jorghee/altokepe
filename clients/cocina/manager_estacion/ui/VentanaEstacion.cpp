@@ -3,6 +3,10 @@
 #include <QPushButton>
 #include <QDebug>
 
+// Definimos roles para IDs
+constexpr int Role_IdPedido = Qt::UserRole + 1;
+constexpr int Role_IdInstancia = Qt::UserRole + 2;
+
 VentanaEstacion::VentanaEstacion(const QString& nombreEstacion, QWidget* parent)
     : QWidget(parent), m_estacion(nombreEstacion) {
 
@@ -31,8 +35,8 @@ void VentanaEstacion::agregarNuevoPlato(const InfoPlatoVisual& plato) {
     tabla->insertRow(row);
 
     auto* itemNombre = new QTableWidgetItem(plato.nombrePlato);
-    itemNombre->setData(Qt::UserRole + 1, QVariant::fromValue(plato.id_pedido));
-    itemNombre->setData(Qt::UserRole + 2, QVariant::fromValue(plato.id_instancia));
+    itemNombre->setData(Role_IdPedido, QVariant::fromValue(plato.id_pedido));
+    itemNombre->setData(Role_IdInstancia, QVariant::fromValue(plato.id_instancia));
 
     tabla->setItem(row, 0, itemNombre);
     tabla->setItem(row, 1, new QTableWidgetItem(QString::number(plato.prioridad)));
@@ -41,37 +45,28 @@ void VentanaEstacion::agregarNuevoPlato(const InfoPlatoVisual& plato) {
     auto* btnListo = new QPushButton("Listo");
     connect(btnListo, &QPushButton::clicked, this, [this, row]() {
         auto* item = tabla->item(row, 0);
-        long long idPedido = item->data(Qt::UserRole + 1).toLongLong();
-        long long idInstancia = item->data(Qt::UserRole + 2).toLongLong();
+        long long idPedido = item->data(Role_IdPedido).toLongLong();
+        long long idInstancia = item->data(Role_IdInstancia).toLongLong();
         emit marcarListoSolicitado(idPedido, idInstancia);
     });
 
     tabla->setCellWidget(row, 3, btnListo);
 }
 
-
 void VentanaEstacion::actualizarEstadoPlato(long long idPedido, long long idInstancia, const QString& nuevoEstado) {
     for (int fila = 0; fila < tabla->rowCount(); ++fila) {
         auto* item = tabla->item(fila, 0);
         if (!item) continue;
 
-        if (item->data(Qt::UserRole).toLongLong() == idPedido &&
-            item->data(Qt::UserRole + 1).toLongLong() == idInstancia) {
+        if (item->data(Role_IdPedido).toLongLong() == idPedido &&
+            item->data(Role_IdInstancia).toLongLong() == idInstancia) {
             tabla->item(fila, 2)->setText(nuevoEstado);
+
+            if (nuevoEstado.contains("FINALIZADO", Qt::CaseInsensitive)) {
+                tabla->removeRow(fila);
+            }
+
             break;
         }
     }
 }
-
-void VentanaEstacion::eliminarPlato(long long idPedido, long long idInstancia) {
-    for (int fila = 0; fila < tabla->rowCount(); ++fila) {
-        auto* item = tabla->item(fila, 0);
-        if (!item) continue;
-        if (item->data(Qt::UserRole + 1).toLongLong() == idPedido &&
-            item->data(Qt::UserRole + 2).toLongLong() == idInstancia) {
-            tabla->removeRow(fila);
-            break;
-        }
-    }
-}
-

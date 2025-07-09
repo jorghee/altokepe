@@ -46,8 +46,8 @@ void ClienteEstacionApp::onMensajeRecibido(const QJsonObject& mensaje) {
         for (const QJsonValue& val : platosJson) {
             QJsonObject obj = val.toObject();
             VentanaEstacion::InfoPlatoVisual visual;
-            visual.nombrePlato = obj["nombre"].toString(); // <- del servidor
-            visual.estado = "EN_ESPERA"; // estado inicial
+            visual.nombrePlato = obj["nombre"].toString();
+            visual.estado = "EN_ESPERA";
             visual.prioridad = obj["score"].toDouble();
             visual.id_pedido = obj["id_pedido"].toVariant().toLongLong();
             visual.id_instancia = obj["id_instancia"].toVariant().toLongLong();
@@ -58,9 +58,9 @@ void ClienteEstacionApp::onMensajeRecibido(const QJsonObject& mensaje) {
 
     } else if (evento == Protocolo::NUEVO_PLATO_EN_COLA) {
         VentanaEstacion::InfoPlatoVisual visual;
-        visual.nombrePlato = data["nombre"].toString();  // corregido
+        visual.nombrePlato = data["nombre"].toString();
         visual.estado = "EN_ESPERA";
-        visual.prioridad = data["score"].toDouble();     // corregido
+        visual.prioridad = data["score"].toDouble();
         visual.id_pedido = data["id_pedido"].toVariant().toLongLong();
         visual.id_instancia = data["id_instancia"].toVariant().toLongLong();
 
@@ -69,16 +69,12 @@ void ClienteEstacionApp::onMensajeRecibido(const QJsonObject& mensaje) {
     } else if (evento == Protocolo::PLATO_ESTADO_CAMBIADO) {
         long long idPedido = data["id_pedido"].toVariant().toLongLong();
         long long idInstancia = data["id_instancia"].toVariant().toLongLong();
-        QString estado = data["nuevo_estado"].toString();   
+        QString estado = data["nuevo_estado"].toString();
 
+        qDebug() << "[DEBUG] Estado recibido:" << estado;
         m_ventana->actualizarEstadoPlato(idPedido, idInstancia, estado);
-
-        if (estado == "FINALIZADO") {
-            m_ventana->eliminarPlato(idPedido, idInstancia);
-        }
     }
 }
-
 
 void ClienteEstacionApp::onMarcarListo(long long idPedido, long long idInstancia) {
     QJsonObject comando;

@@ -9,9 +9,10 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+# Buscar Qt6
 find_package(Qt6 REQUIRED COMPONENTS Widgets Network)
 
-# Añadir el directorio raíz ('altokepe/') a las rutas de inclusión para los includes globales
+# Incluir el directorio raíz del proyecto común
 include_directories(../../../)
 
 # Definir el ejecutable y sus archivos fuente
@@ -21,12 +22,13 @@ add_executable(ManagerEstacionClient
 
   # Capa de red
   network/ClienteEstacionApp.cpp
-  network/ClienteTCP.cpp    # ✅ Usamos ClienteTCP local, no el de manager_chef
+  network/ClienteTCP.cpp
 
   # Capa de UI
   ui/VentanaEstacion.cpp
+  ui/VentanaEstacionesUnificadas.cpp  # ← Agregado
 
-  # Fuentes comunes necesarios (Serializador y modelos)
+  # Fuentes comunes necesarios
   ../../../common/network/SerializadorJSON.cpp
 
   # Puedes agregar resources.qrc si lo usas

@@ -5,9 +5,8 @@
 #include <unordered_map>
 #include "common/models/PlatoDefinicion.h"
 #include "common/models/InfoPlatoPrioridad.h"
+#include "../ui/VentanaEstacion.h"
 
-
-class VentanaEstacion;
 class ClienteTCP;
 
 class ClienteEstacionApp : public QObject {
@@ -15,7 +14,7 @@ class ClienteEstacionApp : public QObject {
 public:
     explicit ClienteEstacionApp(const QString& nombreEstacion, QObject* parent = nullptr);
     void iniciar();
-
+    QWidget* getVentana() const { return m_ventana; }
 private slots:
     void onConectado();
     void onMensajeRecibido(const QJsonObject& mensaje);
