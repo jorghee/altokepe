@@ -42,12 +42,13 @@ void ClienteEstacionApp::onMensajeRecibido(const QJsonObject& mensaje) {
     if (evento == Protocolo::ACTUALIZACION_ESTADO_ESTACION) {
         QJsonArray platosJson = data["platos_pendientes"].toArray();
         std::vector<VentanaEstacion::InfoPlatoVisual> platos;
+
         for (const QJsonValue& val : platosJson) {
-            const QJsonObject obj = val.toObject();
+            QJsonObject obj = val.toObject();
             VentanaEstacion::InfoPlatoVisual visual;
-            visual.nombrePlato = obj["nombre_plato"].toString();
-            visual.estado = obj["estado"].toString();
-            visual.prioridad = obj["prioridad"].toDouble();
+            visual.nombrePlato = obj["nombre"].toString(); // <- del servidor
+            visual.estado = "EN_ESPERA"; // estado inicial
+            visual.prioridad = obj["score"].toDouble();
             visual.id_pedido = obj["id_pedido"].toVariant().toLongLong();
             visual.id_instancia = obj["id_instancia"].toVariant().toLongLong();
             platos.push_back(visual);
@@ -57,21 +58,27 @@ void ClienteEstacionApp::onMensajeRecibido(const QJsonObject& mensaje) {
 
     } else if (evento == Protocolo::NUEVO_PLATO_EN_COLA) {
         VentanaEstacion::InfoPlatoVisual visual;
-        visual.nombrePlato = data["nombre_plato"].toString();
-        visual.estado = data["estado"].toString();
-        visual.prioridad = data["prioridad"].toDouble();
+        visual.nombrePlato = data["nombre"].toString();  // corregido
+        visual.estado = "EN_ESPERA";
+        visual.prioridad = data["score"].toDouble();     // corregido
         visual.id_pedido = data["id_pedido"].toVariant().toLongLong();
         visual.id_instancia = data["id_instancia"].toVariant().toLongLong();
+
         m_ventana->agregarNuevoPlato(visual);
 
     } else if (evento == Protocolo::PLATO_ESTADO_CAMBIADO) {
         long long idPedido = data["id_pedido"].toVariant().toLongLong();
         long long idInstancia = data["id_instancia"].toVariant().toLongLong();
-        QString estado = data["nuevo_estado"].toString();
+        QString estado = data["nuevo_estado"].toString();   
 
         m_ventana->actualizarEstadoPlato(idPedido, idInstancia, estado);
+
+        if (estado == "FINALIZADO") {
+            m_ventana->eliminarPlato(idPedido, idInstancia);
+        }
     }
 }
+
 
 void ClienteEstacionApp::onMarcarListo(long long idPedido, long long idInstancia) {
     QJsonObject comando;

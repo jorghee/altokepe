@@ -3,11 +3,17 @@
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
-    app.setApplicationName("Estación de Cocina");
+    app.setApplicationName("Estaciones de Cocina");
 
-    // Puedes cambiar el nombreEstacion por "Carnes", "Postres", etc.
-    ClienteEstacionApp clienteEstacion("Carnes");
-    clienteEstacion.iniciar();
-
+    ClienteEstacionApp* estacionCarnes = new ClienteEstacionApp("Carnes");
+    ClienteEstacionApp* estacionFrios = new ClienteEstacionApp("Fríos");
+    ClienteEstacionApp* estacionPostres = new ClienteEstacionApp("Postres");
+    ClienteEstacionApp* estacionGuisos = new ClienteEstacionApp("Guisos");
+    ClienteEstacionApp* estacionBebidas = new ClienteEstacionApp("Bebidas");
+    estacionCarnes->iniciar();
+    estacionFrios->iniciar();
+    estacionPostres->iniciar();
+    estacionGuisos->iniciar();
+    estacionBebidas->iniciar();
     return app.exec();
 }
