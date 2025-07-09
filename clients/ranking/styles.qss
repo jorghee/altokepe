@@ -1,0 +1,25 @@
+/* menu.qss */
+
+QGroupBox {
+    border: 2px solid #8B0000;
+    border-radius: 10px;
+    margin: 10px;
+    padding: 8px;
+    font-weight: bold;
+    font-size: 16px;
+    background-color: #FFF5EE;
+}
+
+QGroupBox:title {
+    subcontrol-origin: margin;
+    subcontrol-position: top center;
+    padding: 0 5px;
+    color: #8B0000;
+    font-size: 18px;
+}
+
+QLabel {
+    font-size: 14px;
+    padding: 2px 0;
+    color: #333;
+}

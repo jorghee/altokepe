@@ -110,7 +110,9 @@ void LogicaNegocio::procesarMensaje(const QJsonObject& mensaje, ManejadorCliente
     procesarConfirmarEntrega(mensaje, remitente);
   } else if (comando == Protocolo::DEVOLVER_PLATO) {
     procesarDevolverPlato(mensaje, remitente);
-  } else {
+  } else if (comando == "SOLICITAR_ESTADO") {
+    enviarEstadoInicial(remitente);  // <<=== NUEVO
+  }else{
     qWarning() << "Comando desconocido recibido:" << comando;
     return;
   }
@@ -413,6 +415,14 @@ QJsonObject LogicaNegocio::getEstadoParaManagerYRanking(bool incluirMenu) {
         qWarning() << "ID de plato no encontrado en el menú:" << par.first;
     }
 }
+
+      const PlatoDefinicion& plato = m_menu.at(par.first);  
+      QJsonObject item;
+      item["nombre"] = QString::fromStdString(m_menu.at(par.first).nombre);
+      item["cantidad"] = par.second;
+      item["precio"] = plato.costo;
+      rankingArray.append(item);
+  }
   data["ranking"] = rankingArray;
 
   if (incluirMenu) {
