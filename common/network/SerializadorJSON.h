@@ -4,6 +4,7 @@
 #include <QJsonObject>
 #include "../models/PedidoMesa.h"
 #include "../models/PlatoDefinicion.h"
+#include "../models/InfoPlatoPrioridad.h"
 
 class SerializadorJSON {
 public:
@@ -25,6 +26,10 @@ public:
 
   static QString estadoPedidoToString(EstadoPedido estado);
   static EstadoPedido stringToEstadoPedido(const QString& str);
+  // InfoPlatoPrioridad
+  static QJsonObject infoPlatoPrioridadToJson(const InfoPlatoPrioridad& info);
+  static InfoPlatoPrioridad jsonToInfoPlatoPrioridad(const QJsonObject& json);
+
 };
 
 #endif

@@ -108,3 +108,20 @@ EstadoPedido SerializadorJSON::stringToEstadoPedido(const QString& str) {
   if (str == "CANCELADO") return EstadoPedido::CANCELADO;
   return EstadoPedido::PENDIENTE; // Default
 }
+
+QJsonObject SerializadorJSON::infoPlatoPrioridadToJson(const InfoPlatoPrioridad& info) {
+  QJsonObject json;
+  json["id_pedido"] = QJsonValue::fromVariant(info.id_pedido);
+  json["id_instancia"] = QJsonValue::fromVariant(info.id_instancia_plato);
+  json["score"] = info.score_prioridad;
+  return json;
+}
+
+InfoPlatoPrioridad SerializadorJSON::jsonToInfoPlatoPrioridad(const QJsonObject& json) {
+  InfoPlatoPrioridad info;
+  info.id_pedido = json["id_pedido"].toVariant().toLongLong();
+  info.id_instancia_plato = json["id_instancia"].toVariant().toLongLong();
+  info.score_prioridad = json["score"].toDouble();
+  return info;
+}
+
