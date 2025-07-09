@@ -1,13 +1,14 @@
-#ifndef CLIENTERANKING_H
-#define CLIENTERANKING_H
+#pragma once
 
 #include <QObject>
 #include <QTcpSocket>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QTimer>
 
 class ClienteRanking : public QObject {
     Q_OBJECT
+
 public:
     explicit ClienteRanking(QObject* parent = nullptr);
     void conectar(const QString& host, quint16 puerto);
@@ -18,11 +19,10 @@ signals:
 private slots:
     void onConectado();
     void onDatosRecibidos();
-    void onError(QAbstractSocket::SocketError socketError);  // ✅ Declaración agregada
+    void solicitarEstado();  // NUEVO SLOT
 
 private:
     QTcpSocket* m_socket;
     QByteArray m_buffer;
+    QTimer* m_timer;         // NUEVO ATRIBUTO
 };
-
-#endif // CLIENTERANKING_H

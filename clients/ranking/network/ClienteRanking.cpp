@@ -1,37 +1,32 @@
 #include "ClienteRanking.h"
 #include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
 #include <QDebug>
-#include <QTcpSocket>
 
 ClienteRanking::ClienteRanking(QObject* parent)
-    : QObject(parent), m_socket(new QTcpSocket(this)) {
-    
+    : QObject(parent),
+      m_socket(new QTcpSocket(this)),
+      m_timer(new QTimer(this))  // Inicializamos el timer
+{
     connect(m_socket, &QTcpSocket::connected, this, &ClienteRanking::onConectado);
     connect(m_socket, &QTcpSocket::readyRead, this, &ClienteRanking::onDatosRecibidos);
-    connect(m_socket, &QTcpSocket::errorOccurred, this, &ClienteRanking::onError);
+    connect(m_timer, &QTimer::timeout, this, &ClienteRanking::solicitarEstado);
 }
 
 void ClienteRanking::conectar(const QString& host, quint16 puerto) {
-    qDebug() << "Conectando al servidor" << host << "en el puerto" << puerto << "...";
-    m_socket->connectToHost(host, 5555);
+    m_socket->connectToHost(host, puerto);
 }
 
 void ClienteRanking::onConectado() {
     QJsonObject mensaje;
-    mensaje["comando"] = "IDENTIFICARSE";  // ⚠️ En mayúsculas
+    mensaje["comando"] = "IDENTIFICARSE";
     mensaje["rol"] = "Ranking";
 
     QJsonDocument doc(mensaje);
     m_socket->write(doc.toJson(QJsonDocument::Compact) + "\n");
 
     qDebug() << "Cliente Ranking conectado e identificado.";
-}
-
-void ClienteRanking::onError(QAbstractSocket::SocketError socketError) {
-    Q_UNUSED(socketError);
-    qWarning() << "❌ Error al conectar con el servidor:" << m_socket->errorString();
+    
+    m_timer->start(5000);  // Comenzar a solicitar cada 5 segundos
 }
 
 void ClienteRanking::onDatosRecibidos() {
@@ -43,20 +38,21 @@ void ClienteRanking::onDatosRecibidos() {
         m_buffer.remove(0, pos + 1);
 
         QJsonDocument doc = QJsonDocument::fromJson(linea);
-        if (!doc.isObject()) {
-            qWarning() << "JSON inválido recibido:" << linea;
-            continue;
-        }
+        if (!doc.isObject()) continue;
 
         QJsonObject obj = doc.object();
-        QString evento = obj.value("evento").toString();
-
-        if (evento == "ACTUALIZACION_ESTADO_GENERAL") {
-            QJsonObject data = obj.value("data").toObject();
-            QJsonArray ranking = data.value("ranking").toArray();
-            emit rankingActualizado(ranking);
-        } else {
-            qDebug() << "Evento desconocido recibido:" << evento;
+        if (obj["evento"].toString() == "ACTUALIZACION_ESTADO_GENERAL") {
+            QJsonObject data = obj["data"].toObject();
+            emit rankingActualizado(data["ranking"].toArray());
         }
+    }
+}
+
+void ClienteRanking::solicitarEstado() {
+    if (m_socket->state() == QAbstractSocket::ConnectedState) {
+        QJsonObject mensaje;
+        mensaje["comando"] = "SOLICITAR_ESTADO";
+        QJsonDocument doc(mensaje);
+        m_socket->write(doc.toJson(QJsonDocument::Compact) + "\n");
     }
 }

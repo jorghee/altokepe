@@ -3,17 +3,20 @@ project(RankingClient)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# 🟢 HABILITA AUTOMOC y AUTOUIC
+# 🟢 Habilita AUTOMOC y AUTOUIC
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
+# ✅ Sin QtCharts
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Gui Network)
 
 add_executable(RankingClient
     main.cpp
     ui/VentanaRanking.cpp
+    ui/VentanaRanking.h
     network/ClienteRanking.cpp
+    network/ClienteRanking.h
 )
 
 target_include_directories(RankingClient PRIVATE

@@ -1,37 +1,89 @@
 #include "VentanaRanking.h"
-#include <QVBoxLayout>
 #include <QHeaderView>
+#include <QTableWidgetItem>
+#include <QVBoxLayout>
+#include <QFont>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonValue>
+#include <algorithm>
 
 VentanaRanking::VentanaRanking(QWidget* parent) : QWidget(parent) {
-    setWindowTitle("Ranking de Platos Vendidos");
-    resize(400, 500);
+    this->setStyleSheet("background-color: white;");
 
-    m_tabla = new QTableWidget(this);
-    m_tabla->setColumnCount(2);
-    m_tabla->setHorizontalHeaderLabels({ "Plato", "Cantidad Vendida" });
-    m_tabla->horizontalHeader()->setStretchLastSection(true);
-    m_tabla->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    m_tabla->setSelectionMode(QAbstractItemView::NoSelection);
+    QVBoxLayout* layout = new QVBoxLayout(this);
+    tablaRanking = new QTableWidget(this);
+    tablaRanking->setColumnCount(4);
+    tablaRanking->setHorizontalHeaderLabels({ "Puesto", "Nombre", "Unidades", "Precio" });
+    tablaRanking->horizontalHeader()->setStretchLastSection(true);
+    tablaRanking->verticalHeader()->setVisible(false);
 
-    auto* layout = new QVBoxLayout(this);
-    layout->addWidget(m_tabla);
+    tablaRanking->setStyleSheet(R"(
+        QHeaderView::section {
+            background-color: #ff9900;
+            color: white;
+            font-weight: bold;
+            padding: 6px;
+        }
+        QTableWidget {
+            font-size: 14px;
+        }
+    )");
+
+    layout->addWidget(tablaRanking);
     setLayout(layout);
-
-    m_cliente = new ClienteRanking(this);
-    connect(m_cliente, &ClienteRanking::rankingActualizado, this, &VentanaRanking::actualizarRanking);
-    m_cliente->conectar("127.0.0.1", 4242); // Ajusta el puerto si usas otro
 }
 
 void VentanaRanking::actualizarRanking(const QJsonArray& ranking) {
-    m_tabla->clearContents();
-    m_tabla->setRowCount(ranking.size());
+    tablaRanking->setRowCount(0);
 
-    for (int i = 0; i < ranking.size(); ++i) {
-        QJsonObject item = ranking[i].toObject();
-        QString nombre = item.value("nombre").toString();
-        int cantidad = item.value("cantidad").toInt();
+    QVector<QPair<QString, int>> datos;
+    QMap<QString, double> precios;
 
-        m_tabla->setItem(i, 0, new QTableWidgetItem(nombre));
-        m_tabla->setItem(i, 1, new QTableWidgetItem(QString::number(cantidad)));
+    int maxVentas = 0;
+
+    for (const QJsonValue& val : ranking) {
+        QJsonObject obj = val.toObject();
+        QString nombre = obj["nombre"].toString();
+        int unidades = obj["cantidad"].toInt();
+        double precio = obj["precio"].toDouble();
+
+        datos.append({nombre, unidades});
+        precios[nombre] = precio;
+
+        if (unidades > maxVentas)
+            maxVentas = unidades;
+    }
+
+    std::sort(datos.begin(), datos.end(), [](const auto& a, const auto& b) {
+        return a.second > b.second;
+    });
+
+    tablaRanking->setRowCount(datos.size());
+
+    for (int i = 0; i < datos.size(); ++i) {
+        const QString& nombre = datos[i].first;
+        int unidades = datos[i].second;
+        double precio = precios[nombre];
+
+        // Columna 0: Puesto
+        QTableWidgetItem* puestoItem = new QTableWidgetItem(QString::number(i + 1));
+        if (i == 0) {
+            puestoItem->setBackground(QColor("#ffff66"));  // amarillo para el 1er puesto
+            puestoItem->setFont(QFont("Arial", 10, QFont::Bold));
+        }
+        tablaRanking->setItem(i, 0, puestoItem);
+
+        // Columna 1: Nombre
+        QTableWidgetItem* nombreItem = new QTableWidgetItem(nombre);
+        tablaRanking->setItem(i, 1, nombreItem);
+
+        // Columna 2: Unidades
+        QTableWidgetItem* unidadesItem = new QTableWidgetItem(QString::number(unidades));
+        tablaRanking->setItem(i, 2, unidadesItem);
+
+        // Columna 3: Precio
+        QTableWidgetItem* precioItem = new QTableWidgetItem(QString("S/. %1").arg(precio, 0, 'f', 2));
+        tablaRanking->setItem(i, 3, precioItem);
     }
 }

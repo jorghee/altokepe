@@ -3,19 +3,17 @@
 
 #include <QWidget>
 #include <QTableWidget>
-#include "../network/ClienteRanking.h"
+#include <QVBoxLayout>
+#include <QJsonArray>
 
 class VentanaRanking : public QWidget {
     Q_OBJECT
 public:
     explicit VentanaRanking(QWidget* parent = nullptr);
-
-private slots:
     void actualizarRanking(const QJsonArray& ranking);
 
 private:
-    QTableWidget* m_tabla;
-    ClienteRanking* m_cliente;
+    QTableWidget* tablaRanking;
 };
 
 #endif // VENTANARANKING_H
