@@ -11,6 +11,7 @@
 #include <chrono>
 #include <algorithm>
 
+
 LogicaNegocio* LogicaNegocio::s_instance = nullptr;
 
 LogicaNegocio::LogicaNegocio(QObject* parent) 
@@ -410,19 +411,14 @@ QJsonObject LogicaNegocio::getEstadoParaManagerYRanking(bool incluirMenu) {
         QJsonObject item;
         item["nombre"] = QString::fromStdString(it->second.nombre);
         item["cantidad"] = par.second;
+        item["precio"] = it->second.costo;
         rankingArray.append(item);
     } else {
         qWarning() << "ID de plato no encontrado en el menú:" << par.first;
     }
 }
 
-      const PlatoDefinicion& plato = m_menu.at(par.first);  
-      QJsonObject item;
-      item["nombre"] = QString::fromStdString(m_menu.at(par.first).nombre);
-      item["cantidad"] = par.second;
-      item["precio"] = plato.costo;
-      rankingArray.append(item);
-  }
+  
   data["ranking"] = rankingArray;
 
   if (incluirMenu) {
