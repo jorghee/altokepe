@@ -9,7 +9,7 @@
 ClienteEstacionApp::ClienteEstacionApp(const QString& nombreEstacion, QObject* parent)
     : QObject(parent), m_nombreEstacion(nombreEstacion) {
     
-    m_ventana = new VentanaEstacion(nombreEstacion);
+    m_ventana = new VentanaEstacion(nombreEstacion, qobject_cast<QWidget*>(parent));
     m_clienteTCP = new ClienteTCP(this);
 
     // Red
