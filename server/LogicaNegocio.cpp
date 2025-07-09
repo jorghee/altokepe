@@ -265,6 +265,7 @@ void LogicaNegocio::procesarMarcarPlatoTerminado(const QJsonObject& data, Maneja
   dataPlato["nuevo_estado"] = SerializadorJSON::estadoPlatoToString(EstadoPlato::FINALIZADO);
   notifActualizacionPlato[Protocolo::DATA] = dataPlato;
   notificarManagersYRanking_unlocked(notifActualizacionPlato);
+  notificarEstacion_unlocked(nombreEstacion, notifActualizacionPlato);
 
   if (todosTerminados) {
     pedido.estado_general = EstadoPedido::COMPLETADO;
