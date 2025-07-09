@@ -12,6 +12,9 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Gui Network)
 
 add_executable(RankingClient
+
+    resources.qrc
+    
     main.cpp
     ui/VentanaRanking.cpp
     ui/VentanaRanking.h
