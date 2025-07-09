@@ -25,13 +25,19 @@ void PanelPedido::configurarUI() {
     labelMesa = new QLabel("Mesa: --", this);
     labelPedido = new QLabel("Pedido N°: 0001", this);
 
+    auto *nombreLayout = new QHBoxLayout();
+    auto *labelNombre = new QLabel("Nombre del cliente:", this);
     inputNombre = new QLineEdit(this);
-    inputNombre->setPlaceholderText("Nombre del cliente");
+    nombreLayout->addWidget(labelNombre);
+    nombreLayout->addWidget(inputNombre);
 
     auto *tituloPlatos = new QLabel("Platos:", this);
     tituloPlatos->setStyleSheet("font-weight: bold;");
 
     listaPlatos = new QListWidget(this);
+    listaPlatos->setFixedHeight(170); // reducir altura
+    listaPlatos->setStyleSheet("padding-left: 6px;"); // padding izquierdo
+
     connect(listaPlatos, &QListWidget::itemClicked, this, [=](QListWidgetItem *item) {
         int id = item->data(Qt::UserRole).toInt();
         QString nombre = item->text();
@@ -41,20 +47,18 @@ void PanelPedido::configurarUI() {
     tablaPedido = new QTableWidget(0, 3, this);
     tablaPedido->setHorizontalHeaderLabels({"Plato", "Cantidad", "Acción"});
     tablaPedido->horizontalHeader()->setStretchLastSection(true);
-
-    // Ajustar ancho de columnas
     tablaPedido->setColumnWidth(0, 250); // Plato
     tablaPedido->setColumnWidth(1, 100); // Cantidad
     tablaPedido->setColumnWidth(2, 60);  // Acción
 
     botonEnviar = new QPushButton("Enviar Pedido", this);
-    botonEnviar->setObjectName("botonEnviar"); // para aplicar estilo bold por QSS
+    botonEnviar->setObjectName("botonEnviar");
     botonEnviar->setStyleSheet("font-weight: bold;");
     connect(botonEnviar, &QPushButton::clicked, this, &PanelPedido::enviarPedido);
 
     layout->addWidget(labelMesa);
     layout->addWidget(labelPedido);
-    layout->addWidget(inputNombre);
+    layout->addLayout(nombreLayout);
     layout->addSpacing(10);
     layout->addWidget(tituloPlatos);
     layout->addWidget(listaPlatos);
@@ -157,7 +161,6 @@ void PanelPedido::enviarPedido() {
     inputNombre->clear();
     tablaPedido->setRowCount(0);
 
-    // Reset mesa seleccionada
     mesaActual = -1;
     labelMesa->setText("Mesa: --");
 }
