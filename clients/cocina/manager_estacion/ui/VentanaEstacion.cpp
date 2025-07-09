@@ -60,6 +60,7 @@ void VentanaEstacion::actualizarEstadoPlato(long long idPedido, long long idInst
 
         if (item->data(Role_IdPedido).toLongLong() == idPedido &&
             item->data(Role_IdInstancia).toLongLong() == idInstancia) {
+
             tabla->item(fila, 2)->setText(nuevoEstado);
 
             if (nuevoEstado.contains("FINALIZADO", Qt::CaseInsensitive)) {
@@ -70,3 +71,4 @@ void VentanaEstacion::actualizarEstadoPlato(long long idPedido, long long idInst
         }
     }
 }
+
