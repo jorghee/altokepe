@@ -27,7 +27,7 @@ VentanaEstacionesUnificadas::~VentanaEstacionesUnificadas() {
 }
 
 void VentanaEstacionesUnificadas::crearEstaciones() {
-    QStringList nombres = {"Carnes", "Fríos", "Postres", "Guisos", "Bebidas"};
+    QStringList nombres = {"Snack", "Otro", "Principal", "Bebida"};
 
     for (const QString& nombre : nombres) {
         auto* cliente = new ClienteEstacionApp(nombre, this);
