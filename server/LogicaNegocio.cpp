@@ -403,11 +403,16 @@ QJsonObject LogicaNegocio::getEstadoParaManagerYRanking(bool incluirMenu) {
   
   QJsonArray rankingArray;
   for(const auto& par : m_conteoPlatosRanking){
-      QJsonObject item;
-      item["nombre"] = QString::fromStdString(m_menu.at(par.first).nombre);
-      item["cantidad"] = par.second;
-      rankingArray.append(item);
-  }
+    auto it = m_menu.find(par.first);
+    if (it != m_menu.end()) {
+        QJsonObject item;
+        item["nombre"] = QString::fromStdString(it->second.nombre);
+        item["cantidad"] = par.second;
+        rankingArray.append(item);
+    } else {
+        qWarning() << "ID de plato no encontrado en el menú:" << par.first;
+    }
+}
   data["ranking"] = rankingArray;
 
   if (incluirMenu) {
