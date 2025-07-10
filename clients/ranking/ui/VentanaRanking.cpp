@@ -25,6 +25,7 @@ VentanaRanking::VentanaRanking(QWidget* parent) : QWidget(parent) {
     tablaRanking = new QTableWidget(this);
     tablaRanking->setColumnCount(4);
     tablaRanking->setHorizontalHeaderLabels({ "Puesto", "Nombre", "Unidades", "Precio" });
+    tablaRanking->setColumnWidth(3, 100); // Fija el ancho de la columna "Precio" (columna 3)
     tablaRanking->horizontalHeader()->setStretchLastSection(true);
     tablaRanking->verticalHeader()->setVisible(false);
 
@@ -40,6 +41,17 @@ VentanaRanking::VentanaRanking(QWidget* parent) : QWidget(parent) {
         }
     )");
     
+    // Título
+    QLabel* tituloMenu = new QLabel("Carta Menú");
+    tituloMenu->setAlignment(Qt::AlignCenter);
+    tituloMenu->setStyleSheet("font-size: 40px; font-weight: bold; color: #e65100;");
+    tituloMenu->setContentsMargins(0, 0, 0, 0);
+
+    // Frase decorativa
+    QLabel* fraseMenu = new QLabel("No dejes para mañana lo que puedes comer hoy");
+    fraseMenu->setAlignment(Qt::AlignCenter);
+    fraseMenu->setStyleSheet("font-size: 22px; font-style: italic; color: #6d4c41;");
+
     //cambio
     scrollMenu = new QScrollArea(this);
     menuContainer = new QWidget();
@@ -48,9 +60,20 @@ VentanaRanking::VentanaRanking(QWidget* parent) : QWidget(parent) {
     scrollMenu->setWidget(menuContainer);
     scrollMenu->setWidgetResizable(true);
 
-    auto* layout = new QHBoxLayout(this); // cambio
-    layout->addWidget(tablaRanking,3); // cambio 
-    layout->addWidget(scrollMenu, 7); //cambio
+    //Cambiooo
+    QVBoxLayout* menuLayout = new QVBoxLayout();
+    menuLayout->setContentsMargins(0, 0, 0, 0); // eliminar margen superior
+    menuLayout->setSpacing(10);
+    menuLayout->addWidget(tituloMenu);
+    menuLayout->addWidget(fraseMenu);
+    menuLayout->addWidget(scrollMenu);
+
+    QWidget* menuWidget = new QWidget();
+    menuWidget->setLayout(menuLayout);
+
+    auto* layout = new QHBoxLayout(this);
+    layout->addWidget(tablaRanking, 3);
+    layout->addWidget(menuWidget, 7);
     setLayout(layout);
 
     //cambio
@@ -132,14 +155,14 @@ void VentanaRanking::mostrarMenuAgrupado(const QJsonArray& menu) {
         platosPorEstacion[estacion].append(qMakePair(nombre, costo));
     }
 
-    // 🔄 Limpiar layout anterior
+    //  Limpiar layout anterior
     QLayoutItem* item;
     while ((item = gridMenuLayout->takeAt(0)) != nullptr) {
         if (item->widget()) item->widget()->deleteLater();
         delete item;
     }
 
-    // 📊 Mostrar en 2 columnas
+    //  Mostrar en 2 columnas
     int col = 0;
     int row = 0;
     const int colCount = 2;
@@ -152,9 +175,29 @@ void VentanaRanking::mostrarMenuAgrupado(const QJsonArray& menu) {
         QVBoxLayout* vbox = new QVBoxLayout();
 
         for (const auto& par : platos) {
-            QString texto = QString("• %1 - S/ %2").arg(par.first).arg(par.second, 0, 'f', 2);
-            QLabel* label = new QLabel(texto);
-            vbox->addWidget(label);
+            QWidget* filaWidget = new QWidget();
+            filaWidget->setObjectName("itemPlato");
+            QHBoxLayout* filaLayout = new QHBoxLayout(filaWidget);
+            filaLayout->setContentsMargins(0, 0, 0, 0);  // elimina márgenes
+            filaLayout->setSpacing(0);                  // elimina espacio entre widgets
+
+            QLabel* nombreLabel = new QLabel(par.first);
+            QLabel* precioLabel = new QLabel(QString("S/ %1").arg(par.second, 0, 'f', 2));
+
+            nombreLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+            precioLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+
+            nombreLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+            precioLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
+
+            // Estilos sin borde ni fondo
+            nombreLabel->setStyleSheet("font-size: 15px; color: #333; font-weight: bold; border-radius: 6px; background:rgba(226, 225, 225, 0.47);");
+            precioLabel->setStyleSheet("font-size: 15px; color: #ff6600; font-weight: bold; border-radius: 6px; background:rgba(226, 225, 225, 0.47);");
+            filaLayout->addWidget(nombreLabel);
+            filaLayout->addWidget(precioLabel);
+            vbox->addWidget(filaWidget);
+
+
         }
 
         grupo->setLayout(vbox);
