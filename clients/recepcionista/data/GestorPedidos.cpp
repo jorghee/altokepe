@@ -2,6 +2,7 @@
 #include <QDir>
 #include <QFile>
 #include <QTextStream>
+#include <QCoreApplication>
 
 void GestorPedidos::registrar(const RegistroPedido &pedido) {
     arbol.insertarPedido(pedido);
@@ -17,14 +18,22 @@ QList<RegistroPedido> GestorPedidos::ultimos(int n) {
 }
 
 void GestorPedidos::guardarFacturaEnArchivo(const RegistroPedido &pedido) {
-    QDir directorio("facturas");
-    if (!directorio.exists()) {
-        QDir().mkdir("facturas");
+    // Obtener ruta del ejecutable
+    QString rutaBase = QCoreApplication::applicationDirPath();
+    QDir dir(rutaBase);
+    dir.cdUp(); // Subir de /build a /recepcionista
+    dir.cd("facturas");
+
+    // Si no existe la carpeta 'facturas', crearla
+    if (!dir.exists()) {
+        dir.mkpath(".");
     }
 
-    QString ruta = QString("facturas/factura_%1.txt").arg(pedido.idPedido, 4, 10, QChar('0'));
-    QFile archivo(ruta);
+    // Construir ruta final de archivo
+    QString nombreArchivo = QString("factura_%1.txt").arg(pedido.idPedido, 4, 10, QChar('0'));
+    QString rutaCompleta = dir.filePath(nombreArchivo);
 
+    QFile archivo(rutaCompleta);
     if (archivo.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QTextStream out(&archivo);
         out << "FACTURA DE PEDIDO\n";
