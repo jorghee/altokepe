@@ -28,8 +28,8 @@ void PanelMesas::crearBotones() {
         QPushButton *boton = new QPushButton(texto, this);
         boton->setObjectName("mesa");
         boton->setCheckable(true);
-        boton->setMinimumSize(300, 250);
-        boton->setMaximumSize(300, 250);
+        boton->setMinimumSize(250, 200);
+        boton->setMaximumSize(250, 200);
 
         // Fuente para emoji + texto, más grande pero uniforme
         QFont fuente;
