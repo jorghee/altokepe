@@ -34,7 +34,6 @@ private:
     QPushButton *botonEnviar;
 
     ClienteRecepcionista cliente;
-    GestorPedidos gestor; // ✅ Nuevo atributo
 
     void configurarUI();
     void agregarPlatoAlPedido(int idPlato, const QString &nombre);

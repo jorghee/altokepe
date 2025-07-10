@@ -11,8 +11,15 @@ RegistroPedido* ArbolBMas::buscarPedido(int id) {
 
 QList<RegistroPedido> ArbolBMas::ultimosPedidos(int cantidad) {
     QList<RegistroPedido> lista;
-    for (auto it = datos.rbegin(); it != datos.rend() && cantidad > 0; ++it, --cantidad) {
+    auto it = datos.rbegin();
+    while (it != datos.rend() && cantidad--) {
         lista.prepend(it->second);
+        ++it;
     }
     return lista;
+}
+
+int ArbolBMas::obtenerUltimoId() const {
+    if (datos.empty()) return 0;
+    return datos.rbegin()->first;
 }

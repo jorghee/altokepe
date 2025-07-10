@@ -23,7 +23,10 @@
         auto *layout = new QVBoxLayout(this);
 
         labelMesa = new QLabel("Mesa: --", this);
-        labelPedido = new QLabel("Pedido N°: 0001", this);
+        labelPedido = new QLabel(this);
+        numeroPedido = gestorPedidos.obtenerUltimoIdPedido() + 1;
+        labelPedido->setText(QString("Pedido N°: %1").arg(QString("%1").arg(numeroPedido, 4, 10, QChar('0'))));
+
 
         auto *nombreLayout = new QHBoxLayout();
         auto *labelNombre = new QLabel("Nombre del cliente:", this);
@@ -203,7 +206,7 @@
         pedido.platos = platosLista;
         pedido.total = total;
 
-        gestor.registrar(pedido); // ✅ Guardar en el árbol y generar factura
+        gestorPedidos.registrar(pedido);
 
         QMessageBox::information(this, "Enviado", "Pedido enviado correctamente.");
 

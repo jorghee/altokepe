@@ -1,12 +1,12 @@
 import pandas as pd
-import random
 import json
+import random
 from collections import defaultdict
 
-# Leer el CSV del restaurante
+# Cargar el CSV
 df = pd.read_csv("DataRestaurante.csv")
 
-# Mapeo manual de item_name a IDs de platos
+# Mapeo de nombre de platos a ID (ajusta si cambias tu sistema)
 item_to_id = {
     "Aalopuri": 1,
     "Vadapav": 2,
@@ -17,33 +17,60 @@ item_to_id = {
     "Cold coffee": 7
 }
 
-# Agrupar platos por pedido
-pedidos = defaultdict(list)
+# Nombres falsos para clientes si no hay dato
+nombres_falsos = [
+    "Luis", "Carlos", "Andrea", "Gabriela", "Jorge",
+    "Lucía", "Miguel", "Valeria", "Ricardo", "Ana"
+]
+
+# Agrupar pedidos
+pedidos_dict = defaultdict(list)
+meta_info = {}
 
 for _, row in df.iterrows():
-    order_id = row["order_id"]
-    nombre_item = row["item_name"]
+    id_pedido = int(row["order_id"])
+    item = str(row["item_name"])
     cantidad = int(row["quantity"])
+    precio_unitario = float(row["item_price"])
 
-    if nombre_item in item_to_id:
-        pedidos[order_id].append({
-            "id": item_to_id[nombre_item],
-            "cantidad": cantidad
+    total_calculado = cantidad * precio_unitario
+    total = float(row["transaction_amount"]) if not pd.isna(row["transaction_amount"]) else total_calculado
+
+    if item in item_to_id:
+        pedidos_dict[id_pedido].append({
+            "id": item_to_id[item],
+            "nombre": item,
+            "cantidad": cantidad,
+            "precio": precio_unitario
         })
 
-# Crear estructura de pedidos
+        # Determinar nombre cliente
+        recibido_por = str(row["received_by"]) if isinstance(row["received_by"], str) and row["received_by"].strip() else ""
+        nombre_cliente = recibido_por if recibido_por else random.choice(nombres_falsos)
+
+        # Guardar meta-info (una vez por pedido)
+        if id_pedido not in meta_info:
+            meta_info[id_pedido] = {
+                "nombreCliente": nombre_cliente,
+                "mesa": random.randint(1, 9),
+                "total": total
+            }
+
+# Crear lista final
 estructura_final = []
 
-for _, platos in pedidos.items():
+for id_pedido, platos in pedidos_dict.items():
+    info = meta_info[id_pedido]
     estructura_final.append({
-        "COMANDO": "NUEVO_PEDIDO",
-        "mesa": random.randint(1, 9),
-        "id_recepcionista": random.randint(1, 10),
+        "idPedido": id_pedido,
+        "nombreCliente": info["nombreCliente"],
+        "numeroMesa": info["mesa"],
+        "total": info["total"],
         "platos": platos
     })
 
-# Guardar a JSON
-with open("pedidos_generados.json", "w", encoding="utf-8") as f:
+# Guardar como JSON
+with open("historial_pedidos.json", "w", encoding="utf-8") as f:
     json.dump(estructura_final, f, indent=2, ensure_ascii=False)
 
-print("✅ Archivo 'pedidos_generados.json' generado correctamente.")
+print("✅ Archivo 'historial_pedidos.json' generado correctamente.")
