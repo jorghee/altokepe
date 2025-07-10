@@ -24,6 +24,13 @@ add_executable(ClienteRecepcionista
   # Archivos de red
   network/ClienteRecepcionista.cpp
   network/ClienteRecepcionista.h 
+
+  # Archivos de lógica de almacenamiento
+  data/RegistroPedido.h
+  data/ArbolBMas.cpp
+  data/ArbolBMas.h
+  data/GestorPedidos.cpp
+  data/GestorPedidos.h
 )
 
 target_link_libraries(ClienteRecepcionista PRIVATE Qt6::Widgets Qt6::Network)

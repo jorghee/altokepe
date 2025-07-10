@@ -4,6 +4,7 @@
 #include <QJsonArray>
 #include <QMap>
 #include "../network/ClienteRecepcionista.h"
+#include "../data/GestorPedidos.h" // ✅ Agregado
 #include <QHeaderView>
 
 class QLabel;
@@ -22,20 +23,23 @@ private:
     int mesaActual = -1;
     int numeroPedido = 1;
     QMap<int, QString> menuPlatos;
+    QMap<int, double> preciosPlatos;
 
     QLabel *labelMesa;
     QLabel *labelPedido;
+    QLabel *labelTotal;
     QLineEdit *inputNombre;
     QListWidget *listaPlatos;
     QTableWidget *tablaPedido;
     QPushButton *botonEnviar;
 
     ClienteRecepcionista cliente;
+    GestorPedidos gestor; // ✅ Nuevo atributo
 
     void configurarUI();
     void agregarPlatoAlPedido(int idPlato, const QString &nombre);
     void eliminarPlato(int fila);
-    void actualizarPedido();
+    void actualizarTotal();
 
 private slots:
     void enviarPedido();
