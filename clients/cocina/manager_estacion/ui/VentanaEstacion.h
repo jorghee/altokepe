@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <QWidget>
@@ -22,18 +23,16 @@ public:
     void cargarPlatosIniciales(const std::vector<InfoPlatoVisual>& platos);
     void agregarNuevoPlato(const InfoPlatoVisual& plato);
     void actualizarEstadoPlato(long long idPedido, long long idInstancia, const QString& nuevoEstado);
-    void eliminarPlato(long long idPedido, long long idInstancia);
-    
+
 signals:
     void marcarListoSolicitado(long long idPedido, long long idInstancia);
 
+private slots:
+    void onFinalizarMayorPrioridad();
+
 private:
     QTableWidget* tabla;
+    QPushButton* btnFinalizar;
     QString m_estacion;
-
-    struct PlatoKey {
-        long long idPedido;
-        long long idInstancia;
-    };
-    std::vector<PlatoKey> filaToPlatoKey;
+    std::vector<InfoPlatoVisual> platosOrdenados;
 };

@@ -71,9 +71,12 @@ void ClienteEstacionApp::onMensajeRecibido(const QJsonObject& mensaje) {
         long long idInstancia = data["id_instancia"].toVariant().toLongLong();
         QString estado = data["nuevo_estado"].toString();
 
-        qDebug() << "[DEBUG] Estado recibido:" << estado;
+        qDebug() << "[DEBUG] Estado recibido para cambio:" << estado
+                << "Pedido:" << idPedido << "Instancia:" << idInstancia;
+
         m_ventana->actualizarEstadoPlato(idPedido, idInstancia, estado);
     }
+
 }
 
 void ClienteEstacionApp::onMarcarListo(long long idPedido, long long idInstancia) {
