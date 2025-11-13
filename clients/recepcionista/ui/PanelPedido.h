@@ -4,7 +4,6 @@
 #include <QJsonArray>
 #include <QMap>
 #include "../network/ClienteRecepcionista.h"
-#include "../data/GestorPedidos.h" // ✅ Agregado
 #include <QHeaderView>
 
 class QLabel;
@@ -14,33 +13,32 @@ class QTableWidget;
 class QPushButton;
 
 class PanelPedido : public QWidget {
-    Q_OBJECT
+  Q_OBJECT
 public:
-    explicit PanelPedido(QWidget *parent = nullptr);
-    void setNumeroMesa(int numero);
+  explicit PanelPedido(QWidget *parent = nullptr);
+  void setNumeroMesa(int numero);
 
 private:
-    int mesaActual = -1;
-    int numeroPedido = 1;
-    QMap<int, QString> menuPlatos;
-    QMap<int, double> preciosPlatos;
+  int mesaActual = -1;
+  QMap<int, QString> menuPlatos;
+  QMap<int, double> preciosPlatos;
 
-    QLabel *labelMesa;
-    QLabel *labelPedido;
-    QLabel *labelTotal;
-    QLineEdit *inputNombre;
-    QListWidget *listaPlatos;
-    QTableWidget *tablaPedido;
-    QPushButton *botonEnviar;
+  QLabel *labelMesa;
+  QLabel *labelPedido;
+  QLabel *labelTotal;
+  QLineEdit *inputNombre;
+  QListWidget *listaPlatos;
+  QTableWidget *tablaPedido;
+  QPushButton *botonEnviar;
 
-    ClienteRecepcionista cliente;
+  ClienteRecepcionista cliente;
 
-    void configurarUI();
-    void agregarPlatoAlPedido(int idPlato, const QString &nombre);
-    void eliminarPlato(int fila);
-    void actualizarTotal();
+  void configurarUI();
+  void agregarPlatoAlPedido(int idPlato, const QString &nombre);
+  void eliminarPlato(int fila);
+  void actualizarTotal();
 
 private slots:
-    void enviarPedido();
-    void actualizarMenu(const QJsonArray &menu);
+  void enviarPedido();
+  void actualizarMenu(const QJsonArray &menu);
 };
