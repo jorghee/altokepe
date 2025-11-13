@@ -9,6 +9,8 @@ set(CMAKE_AUTOUIC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Network)
 
+include_directories(../..)
+
 add_executable(ClienteRecepcionista
   main.cpp
   resources.qrc
@@ -25,12 +27,8 @@ add_executable(ClienteRecepcionista
   network/ClienteRecepcionista.cpp
   network/ClienteRecepcionista.h 
 
-  # Archivos de lógica de almacenamiento
-  data/RegistroPedido.h
-  data/ArbolBMas.cpp
-  data/ArbolBMas.h
-  data/GestorPedidos.cpp
-  data/GestorPedidos.h
+  # Archivos de 'common' necesarios
+  ../../common/network/SerializadorJSON.cpp
 )
 
 target_link_libraries(ClienteRecepcionista PRIVATE Qt6::Widgets Qt6::Network)
